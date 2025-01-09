@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "platform_functions",
+    "stock_forecasts",
+    "user",
 ]
 
 MIDDLEWARE = [
