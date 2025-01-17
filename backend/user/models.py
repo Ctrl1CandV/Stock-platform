@@ -1,1 +1,2 @@
+from platform_functions.models import stock_ownership, stock_transactions
 from platform_functions.models import manage, user_accounts

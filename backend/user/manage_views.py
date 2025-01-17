@@ -23,7 +23,7 @@ def deleteUser(request):
     }
     try:
         body = json.loads(request.body.decode('utf-8'))
-        user_id = body.get('user_id')
+        user_id = body.get('userID')
         response['userID'] = user_id
 
         with transaction.atomic():
@@ -56,8 +56,8 @@ def editUserBalance(request):
     }
     try:
         body = json.loads(request.body.decode('utf-8'))
-        user_id = body.get('user_id')
-        new_balance = body.get('new_balance')
+        user_id = body.get('userID')
+        new_balance = body.get('newBalance')
         response['userID'] = user_id
 
         with transaction.atomic():

@@ -54,8 +54,8 @@ class user_accounts(models.Model):
 class stock_basic(models.Model):
     stock_code = models.CharField(max_length=9, primary_key=True)
     stock_name = models.CharField(max_length=20, null=False)
-    industry = models.CharField(max_length=20, null=False)
-    area = models.CharField(max_length=20, null=False)
+    industry = models.CharField(max_length=20, null=True)
+    area = models.CharField(max_length=20, null=True)
     list_date = models.CharField(max_length=8, null=False)
     update_date = models.DateTimeField(auto_now_add=True, null=False)
 
@@ -103,11 +103,12 @@ class stock_transactions(models.Model):
     ]
 
     transaction_id = models.AutoField(primary_key=True)
-    transaction_type = models.IntegerField(null=False)
+    transaction_type = models.IntegerField(choices=TRANSACTION_TYPE_CHOICES, null=False)
+    transaction_date = models.DateTimeField(auto_now_add=True, null=False)
     user_id = models.ForeignKey(user_accounts, on_delete=models.CASCADE, db_column="user_id")
     stock_code = models.CharField(max_length=9, null=False)
     stock_name = models.CharField(max_length=20, null=False)
-    transaction_number = models.IntegerField(choices=TRANSACTION_TYPE_CHOICES, null=False)
+    transaction_number = models.IntegerField(null=False)
     per_price = models.FloatField(null=False)
     gains = models.FloatField(default=0, null=False)
 
