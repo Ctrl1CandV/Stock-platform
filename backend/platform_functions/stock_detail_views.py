@@ -15,7 +15,7 @@ import json
 @csrf_exempt
 @require_http_methods(['POST'])
 def updateAnnualDailyQuotes(request):
-    ''' 获取年度日线行情并保存本地，仅用于模型训练 '''
+    ''' 获取年度日线行情并保存本地，用于模型训练和夏普比例的计算 '''
 
     response = {
         'status': 'ERROR',
@@ -26,7 +26,7 @@ def updateAnnualDailyQuotes(request):
         stock_code = body.get('stockCode')
 
         end_date = datetime.date.today()
-        start_date = end_date - datetime.timedelta(days=400)
+        start_date = end_date - datetime.timedelta(days=500)
         start_date, end_date = start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')
         stock_daily = stock_detail_functions.pro.daily(ts_code=stock_code, start_date=start_date, end_date=end_date)
         stock_daily = stock_daily[['trade_date', 'open', 'high', 'low', 'close', 'pct_chg', 'vol', 'amount']]

@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "platform_functions",
-    "stock_forecasts",
+    "stock_analyse",
     "user",
 ]
 

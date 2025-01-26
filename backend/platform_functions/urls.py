@@ -1,5 +1,5 @@
 from . import stock_basic_views, stock_detail_views
-from django.urls import path
+from django.urls import path, include
 
 urlpatterns = [
     path("isTrading", stock_basic_views.isTrading, name="is_trading"),
@@ -12,4 +12,5 @@ urlpatterns = [
     path("showValuationRatio", stock_detail_views.showValuationRatio, name="show_valuation_ratio"),
     path("showTechnicalIndicator", stock_detail_views.showTechnicalIndicator, name="show_technical_indicator"),
     path("getFinancialMetric", stock_detail_views.getFinancialMetric, name="get_financial_metric"),
+    path("analyse/", include("stock_analyse.urls")),
 ]

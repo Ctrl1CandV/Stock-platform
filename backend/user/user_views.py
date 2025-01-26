@@ -21,7 +21,7 @@ def register(request):
 
     response = {
         'status': 'ERROR',
-        'userID': None,
+        'result': None,
         'errorMessage': None
     }
     try:
