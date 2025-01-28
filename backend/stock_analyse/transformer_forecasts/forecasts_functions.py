@@ -17,6 +17,7 @@ learning_rate = 1e-4
 batch_size = 128
 epochs = 100
 
+# 以项目路径为根目录
 model_dir = './model'
 os.makedirs(model_dir, exist_ok=True)
 

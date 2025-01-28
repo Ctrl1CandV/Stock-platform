@@ -8,7 +8,7 @@ import os
 '''
 
 def cleanModelData():
-    model_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'stock_analyse', 'transformer_forecasts', 'model')
+    model_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'model')
     if os.path.exists(model_dir):
         try:
             # 使用 shutil.rmtree 递归删除目录及其内容
