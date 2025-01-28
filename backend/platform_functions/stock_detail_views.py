@@ -1,9 +1,9 @@
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from . import stock_detail_functions
 from django.db import transaction
 from .models import stock_market
-import stock_detail_functions
 import datetime
 import json
 

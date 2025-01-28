@@ -1,4 +1,4 @@
-from transformer_forecasts import forecasts_functions
+from .transformer_forecasts import forecasts_functions
 import chinese_calendar as calendar
 from bs4 import BeautifulSoup
 import tushare as ts

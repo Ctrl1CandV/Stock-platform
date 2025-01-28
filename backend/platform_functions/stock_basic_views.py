@@ -82,6 +82,8 @@ def isTrading(request):
             stock_code = body.get('stockCode')
             quote = ts.realtime_quote(ts_code=stock_code)
             response['status'], response['perPrice'] = True, quote['PRICE'][0]
+        else:
+            response['errorMessage'] = "不可交易"
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"

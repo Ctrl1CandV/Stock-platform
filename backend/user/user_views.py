@@ -1,6 +1,7 @@
 from .models import user_accounts, stock_ownership, stock_transactions
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from email_validator import validate_email, EmailNotValidError
 from django.views.decorators.http import require_http_methods
+from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.db import transaction
@@ -35,7 +36,8 @@ def register(request):
                 response['errorMessage'] = "邮箱已注册"
                 return JsonResponse(response, status=400)
 
-            # 创建用户，save时自动检查邮箱格式
+            # 验证邮箱，创建用户
+            validate_email(user_email)
             user = user_accounts(
                 user_email=user_email,
                 user_name=user_name
@@ -48,7 +50,7 @@ def register(request):
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
         return JsonResponse(response, status=400)
-    except ValidationError as e:
+    except EmailNotValidError as e:
         response['errorMessage'] = f"邮箱格式错误: {str(e)}"
         return JsonResponse(response, status=400)
     except Exception as e:
@@ -106,7 +108,7 @@ def updateProfile(request):
     try:
         body = json.loads(request.body.decode('utf-8'))
         user_data = body.get('userData')
-        user_id = user_data['userID']
+        user_id = body.get('userID')
 
         with transaction.atomic():
             user = user_accounts.objects.get(user_id=user_id)
@@ -149,9 +151,9 @@ def updateBalance(request):
 
         with transaction.atomic():
             user = user_accounts.objects.get(user_id=user_id)
-            user.balance = new_balance
+            user.user_balance = new_balance
             user.save()
-            response['status'] = 'SUCCESS'
+            response['status'], response['userID'] = 'SUCCESS', user_id
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"

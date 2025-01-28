@@ -1,6 +1,4 @@
 from django.contrib.auth.hashers import make_password, check_password
-from django.core.exceptions import ValidationError
-from django.core.validators import EmailValidator
 from django.db import models
 
 # 管理员和用户
@@ -40,15 +38,6 @@ class user_accounts(models.Model):
 
     def checkPassword(self, row_password):
         return check_password(row_password, self.user_password)
-
-    # 在数据save前会自动调用进行邮箱验证
-    def clean(self):
-        super().clean()
-        email_validator = EmailValidator()
-        try:
-            email_validator(self.user_email)
-        except ValidationError as e:
-            raise ValidationError('Invalid email format')
 
 # 隔天更新，数据源来自Tushare的股票列表
 class stock_basic(models.Model):
