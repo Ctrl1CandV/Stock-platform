@@ -73,10 +73,9 @@ def showStockQurve(request):
         'image': None,
     }
     try:
-        body = json.loads(request.body.decode('utf-8'))
-        stock_code = body.get('stockCode')
-        time_span = body.get('timeSpan')
-        type = int(body.get('type'))
+        stock_code = request.GET.get('stockCode')
+        time_span = request.GET.get('timeSpan')
+        type = int(request.GET.get('type'))
 
         # type用int表示，1对应日线，2对应周线，3对应月线
         image = stock_detail_functions.get_stock_chart(stock_code, time_span, type)
@@ -102,8 +101,7 @@ def showTechnicalIndicator(request):
         'indicatorCharts': None,
     }
     try:
-        body = json.loads(request.body.decode('utf-8'))
-        stock_code = body.get('stockCode')
+        stock_code = request.GET.get('stockCode')
         charts = stock_detail_functions.technical_indicator_charts(stock_code)
         response['status'], response['indicatorCharts'] = 'SUCCESS', charts
 
@@ -127,8 +125,7 @@ def getFinancialMetric(request):
         'financialMetricMap': None,
     }
     try:
-        body = json.loads(request.body.decode('utf-8'))
-        stock_code = body.get('stockCode')
+        stock_code = request.GET.get('stockCode')
         financial_metric_map = stock_detail_functions.financial_metric_form(stock_code)
         response['status'], response['financialMetricMap'] = 'SUCCESS', financial_metric_map
 
@@ -153,8 +150,7 @@ def showValuationRatio(request):
         'valuationRatioImage': None,
     }
     try:
-        body = json.loads(request.body.decode('utf-8'))
-        stock_code = body.get('stockCode')
+        stock_code = request.GET.get('stockCode')
         image = stock_detail_functions.valuation_ratio_charts(stock_code)
         response['status'], response['valuationRatioImage'] = 'SUCCESS', image
 

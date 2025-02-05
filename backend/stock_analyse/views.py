@@ -20,8 +20,7 @@ def forecastStock(request):
         'errorMessage': None
     }
     try:
-        body = json.loads(request.body.decode('utf-8'))
-        stock_code = body.get('stockCode')
+        stock_code = request.GET.get('stockCode')
 
         # 数据缓存判断
         cache_key = f'forecastStock_{stock_code}'
@@ -64,8 +63,7 @@ def showZScore(request):
         'errorMessage': None
     }
     try:
-        body = json.loads(request.body.decode('utf-8'))
-        stock_code = body.get('stockCode')
+        stock_code = request.GET.get('stockCode')
 
         # 数据缓存判断
         cache_key = f'showZScore_{stock_code}'
@@ -97,8 +95,7 @@ def showSharpeRatio(request):
         'errorMessage': None
     }
     try:
-        body = json.loads(request.body.decode('utf-8'))
-        stock_code = body.get('stockCode')
+        stock_code = request.GET.get('stockCode')
 
         # 数据缓存判断
         cache_key = f'showSharpeRatio_{stock_code}'

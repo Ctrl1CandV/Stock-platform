@@ -3,6 +3,7 @@ from email_validator import validate_email, EmailNotValidError
 from django.views.decorators.http import require_http_methods
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
+from django.forms.models import model_to_dict
 from django.http import JsonResponse
 from django.db import transaction
 import json
@@ -22,7 +23,6 @@ def register(request):
 
     response = {
         'status': 'ERROR',
-        'result': None,
         'errorMessage': None
     }
     try:
@@ -45,7 +45,7 @@ def register(request):
             user.setPassword(user_password)
             user.save()
 
-            response['status'] = 'SUCCESS'
+        response['status'] = 'SUCCESS'
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
@@ -61,23 +61,23 @@ def register(request):
 
 
 @csrf_exempt
-@require_http_methods(['GET'])
+@require_http_methods(['POST'])
 def login(request):
     ''' 用户登录 '''
 
     response = {
         'status': 'ERROR',
-        'userID': None,
+        'user': None,
         'errorMessage': None
     }
     try:
         body = json.loads(request.body.decode('utf-8'))
-        user_email = body.get('userEmail')
-        user_password = body.get('userPassword')
+        user_email = body.get('userAccount')
+        user_password =body.get('password')
 
         user = user_accounts.objects.get(user_email=user_email)
         if user.checkPassword(user_password):
-            response['status'], response['userID'] = 'SUCCESS', user.user_id
+            response['status'], response['user'] = 'SUCCESS', model_to_dict(user)
         else:
             response['errorMessage'] = "密码错误"
             return JsonResponse(response, status=401)
@@ -94,6 +94,31 @@ def login(request):
 
     return JsonResponse(response)
 
+@csrf_exempt
+@require_http_methods(['GET'])
+def gainUserInformation(request):
+    ''' 获取用户个人信息 '''
+
+    response = {
+        'status': 'ERROR',
+        'errorMessage': None,
+        'user': None
+    }
+    try:
+        user_id = request.GET.get('userID')
+        user = user_accounts.objects.get(user_id=user_id)
+        response['status'], response['user'] = 'SUCCESS', model_to_dict(user, exclude=['user_password'])
+    except json.JSONDecodeError:
+        response['errorMessage'] = "无效的JSON负载"
+        return JsonResponse(response, status=400)
+    except ObjectDoesNotExist:
+        response['errorMessage'] = "用户不存在"
+        return JsonResponse(response, status=404)
+    except Exception as e:
+        response['errorMessage'] = str(e)
+        return JsonResponse(response, status=500)
+
+    return JsonResponse(response)
 
 @csrf_exempt
 @require_http_methods(['POST'])
@@ -219,18 +244,12 @@ def getStockOwnership(request):
         'stockOwnershipList': None
     }
     try:
-        body = json.loads(request.body.decode('utf-8'))
-        user_id = body.get('userID')
+        user_id = request.GET.get('userID')
         stock_ownerships = stock_ownership.objects.filter(user_id=user_id)
 
         stock_ownership_list = []
         for ownership in stock_ownerships:
-            stock_ownership_map = {
-                'stock_code': ownership.stock_code,
-                'stock_name': ownership.stock_name,
-                'hold_nunmber': ownership.hold_number,
-                'purchase_per_price': ownership.purchase_per_price
-            }
+            stock_ownership_map = model_to_dict(ownership, fields=['stock_code', 'stock_name', 'hold_nunmber', 'purchase_per_price'])
             stock_ownership_list.append(stock_ownership_map)
 
         response['status'], response['stockOwnershipList'] = "SUCCESS", stock_ownership_list
@@ -258,20 +277,15 @@ def getTransactionRecords(request):
         'stockTransactionList': None
     }
     try:
-        body = json.loads(request.body.decode('utf-8'))
-        user_id = body.get('userID')
+        user_id = request.GET.get('userID')
         user_transactions = stock_transactions.objects.filter(user_id=user_id)
 
         stock_transaction_list = []
         for user_transaction in user_transactions:
-            stock_transaction_map = {
-                'transaction_type': user_transaction.transaction_type,
-                'stock_code': user_transaction.stock_code,
-                'stock_name': user_transaction.stock_name,
-                'transaction_number': user_transaction.transaction_number,
-                'per_price': user_transaction.per_price,
-                'gains': user_transaction.gains
-            }
+            stock_transaction_map = model_to_dict(
+                user_transaction,
+                fields=['transaction_type', 'stock_code', 'stock_name', 'transaction_number', 'per_price', 'gains']
+            )
             stock_transaction_list.append(stock_transaction_map)
         response['status'], response['stockTransactionList'] = "SUCCESS", stock_transaction_list
 

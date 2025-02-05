@@ -2,14 +2,14 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.db import models
 
 # 管理员和用户
-class manage(models.Model):
-    manage_id = models.AutoField(primary_key=True)
-    manage_name = models.CharField(max_length=20, unique=True, null=False)
-    manage_password = models.CharField(max_length=20, null=False)
+class manager(models.Model):
+    manager_id = models.AutoField(primary_key=True)
+    manager_name = models.CharField(max_length=20, unique=True, null=False)
+    manager_password = models.CharField(max_length=20, null=False)
 
     class Meta:
-        db_table = "manage"
-        verbose_name = "manage"
+        db_table = "manager"
+        verbose_name = "manager"
 
 class user_accounts(models.Model):
     GENDER_CHOICES = [

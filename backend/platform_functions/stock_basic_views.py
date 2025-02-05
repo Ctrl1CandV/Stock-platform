@@ -2,6 +2,7 @@ from .models import user_accounts, stock_basic, stock_ownership, stock_transacti
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
+from django.forms.models import model_to_dict
 from django.http import JsonResponse
 from django.db import transaction
 from datetime import time
@@ -106,19 +107,12 @@ def queryStockByName(request):
         'stockInformationList': None
     }
     try:
-        body = json.loads(request.body.decode('utf-8'))
-        search_name = body.get('stockName')
+        search_name = request.GET.get('stockName')
         stock_basics = stock_basic.objects.filter(stock_name__contains=search_name)
 
         stock_information_list = []
         for stock in stock_basics:
-            stock_information_map = {
-            'stockCode': stock.stock_code,
-            'stockName': stock.stock_name,
-            'industry': stock.industry,
-            'area': stock.area,
-            'listDate': stock.list_date
-            }
+            stock_information_map = model_to_dict(stock, fields=['stockCode', 'stockName', 'industry', 'area', 'listDate'])
             stock_information_list.append(stock_information_map)
 
         response['status'], response['stockInformationList'] = 'SUCCESS', stock_information_list
@@ -144,16 +138,9 @@ def queryStockByCode(request):
         'stockInformation': None
     }
     try:
-        body = json.loads(request.body.decode('utf-8'))
-        search_code = body.get('stockCode')
+        search_code = request.GET.get('stockCode')
         stock = stock_basic.objects.get(stock_code=search_code)
-        stock_information = {
-            'stockCode': stock.stock_code,
-            'stockName': stock.stock_name,
-            'industry': stock.industry,
-            'area': stock.area,
-            'listDate': stock.list_date
-        }
+        stock_information = model_to_dict(stock, fields=['stockCode', 'stockName', 'industry', 'area', 'listDate'])
         response['status'], response['stockInformation'] = 'SUCCESS', stock_information
 
     except json.JSONDecodeError:

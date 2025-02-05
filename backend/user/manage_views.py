@@ -1,15 +1,49 @@
 from django.views.decorators.http import require_http_methods
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
+from .models import user_accounts, manager
 from django.http import JsonResponse
 from django.db import transaction
-from .models import user_accounts
 import json
 
 '''
 管理员仅有三个针对用户的基础功能
 POST会改变数据，GET不会
 '''
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def login(request):
+    ''' 管理员登录 '''
+
+    response = {
+        'status': 'ERROR',
+        'managerID': None,
+        'errorMessage': None
+    }
+    try:
+        body = json.loads(request.body.decode('utf-8'))
+        manager_name = body.get('userAccount')
+        manager_password = body.get('password')
+
+        Manager = manager.objects.get(manager_name=manager_name)
+        if manager_password == Manager.manager_password:
+            response['status'], response['managerID'] = 'SUCCESS', Manager.manager_id
+        else:
+            response['errorMessage'] = "密码错误"
+            return JsonResponse(response, status=401)
+
+    except json.JSONDecodeError:
+        response['errorMessage'] = "无效的JSON负载"
+        return JsonResponse(response, status=400)
+    except ObjectDoesNotExist:
+        response['errorMessage'] = "管理员不存在"
+        return JsonResponse(response, status=404)
+    except Exception as e:
+        response['errorMessage'] = str(e)
+        return JsonResponse(response, status=500)
+
+    return JsonResponse(response)
 
 @csrf_exempt
 @require_http_methods(['POST'])
