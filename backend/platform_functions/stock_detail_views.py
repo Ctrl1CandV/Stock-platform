@@ -74,7 +74,7 @@ def showStockQurve(request):
     }
     try:
         stock_code = request.GET.get('stockCode')
-        time_span = request.GET.get('timeSpan')
+        time_span = int(request.GET.get('timeSpan'))
         type = int(request.GET.get('type'))
 
         # type用int表示，1对应日线，2对应周线，3对应月线

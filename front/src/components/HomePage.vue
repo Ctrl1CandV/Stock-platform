@@ -60,11 +60,11 @@ export default {
     async toStock(stock) {
       // 更新数据
       try {
-        const response = await this.$axios.post('/platform/updateAnnualDailyQuotes', { stockCode: stock.stock_code});
+        const response = await this.$axios.post('/platform/updateAnnualDailyQuotes', { stockCode: stock.stockCode});
         if (response.data.status === 'SUCCESS') {
           this.$router.push('/user/stock');
-          localStorage.setItem('stockCode', stock.stock_code);
-          localStorage.setItem('stockName', stock.stock_name);
+          localStorage.setItem('stockCode', stock.stockCode);
+          localStorage.setItem('stockName', stock.stockName);
         } else {
           alert('跳转失败: ' + response.data.errorMessage);
         }

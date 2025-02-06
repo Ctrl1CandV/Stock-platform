@@ -116,7 +116,7 @@ def showSharpeRatio(request):
         rate_map = functions.crawling_riskfree_rate()
         rate, sharpe_ratio = functions.calculate_sharpe_ratio(float(rate_map['10年']), data['pct_chg'])
         rate_map[f'{stock_code}'] = rate
-        response['status'], response['sharpeRatio'], response['rateMap'] = 'SUCCESS', sharpe_ratio ,rate_map
+        response['status'], response['sharpeRatio'], response['rateMap'] = 'SUCCESS', sharpe_ratio, rate_map
         cache.set(cache_key, response, timeout=60 * 60)
 
     except json.JSONDecodeError:
@@ -124,6 +124,6 @@ def showSharpeRatio(request):
         return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response0)
+        return JsonResponse(response)
 
     return JsonResponse(response)

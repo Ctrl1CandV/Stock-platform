@@ -21,9 +21,6 @@ pro = ts.pro_api(token)
 此外还需要进行股票列表的更新，设定为启动runserver时自动调用
 '''
 def tradable():
-    # 方便测试
-    return True
-
     now = datetime.datetime.now().time()
     is_trading_time = ((time(9, 30) <= now <= time(11, 30)) or
                        (time(13, 0) <= now <= time(15, 0)))

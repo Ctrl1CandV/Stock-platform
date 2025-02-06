@@ -8,6 +8,8 @@ import datetime
 import base64
 import io
 
+import matplotlib
+matplotlib.use('Agg')
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -122,12 +124,12 @@ def technical_indicator_charts(stock_code):
     # 计算指标并展示图表
     indicators = calculate_technical_indicators(data)
     charts = {
-        'MACDImage': plot_technical_indicator(indicators, 'MACD_12_26_9', 'MACD'),
-        'KDJImage': plot_technical_indicator(indicators, 'K_9_3', 'KDJ (K Line)'),
-        'BOLLImage': plot_technical_indicator(indicators, 'BBM_5_2.0', 'BOLL (Middle Band)'),
-        'BIASImage': plot_technical_indicator(indicators, 'BIAS_SMA_26', 'BIAS'),
-        'RSIImage': plot_technical_indicator(indicators, 'RSI_14', 'RSI'),
-        'WRImage': plot_technical_indicator(indicators, 'WILLR_14', 'WR'),
+        'MACDImage': 'data:image/png;base64,' + plot_technical_indicator(indicators, 'MACD_12_26_9', 'MACD'),
+        'KDJImage': 'data:image/png;base64,' + plot_technical_indicator(indicators, 'K_9_3', 'KDJ (K Line)'),
+        'BOLLImage': 'data:image/png;base64,' + plot_technical_indicator(indicators, 'BBM_5_2.0', 'BOLL (Middle Band)'),
+        'BIASImage': 'data:image/png;base64,' + plot_technical_indicator(indicators, 'BIAS_SMA_26', 'BIAS'),
+        'RSIImage': 'data:image/png;base64,' + plot_technical_indicator(indicators, 'RSI_14', 'RSI'),
+        'WRImage': 'data:image/png;base64,' + plot_technical_indicator(indicators, 'WILLR_14', 'WR'),
     }
     return charts
 
@@ -183,4 +185,4 @@ def financial_metric_form(stock_code):
 if __name__ == '__main__':
     stock_code = '002236.SZ'
     # print(financial_metric_form(stock_code))
-    valuation_ratio_charts(stock_code)
+    print(technical_indicator_charts(stock_code))
