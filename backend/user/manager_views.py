@@ -31,17 +31,17 @@ def login(request):
             response['status'], response['managerID'] = 'SUCCESS', Manager.manager_id
         else:
             response['errorMessage'] = "密码错误"
-            return JsonResponse(response, status=401)
+            return JsonResponse(response)
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except ObjectDoesNotExist:
         response['errorMessage'] = "管理员不存在"
-        return JsonResponse(response, status=404)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -61,20 +61,20 @@ def deleteUser(request):
         response['userID'] = user_id
 
         with transaction.atomic():
-            user = user_accounts.objects.get(id=user_id)
+            user = user_accounts.objects.get(user_id=user_id)
             user.status = False
             user.save()
-            response['status'] = "SUCCESS'"
 
+        response['status'] = "SUCCESS"
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except ObjectDoesNotExist:
         response['errorMessage'] = "用户不存在"
-        return JsonResponse(response, status=404)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -95,9 +95,9 @@ def editUserBalance(request):
         response['userID'] = user_id
 
         with transaction.atomic():
-            user = user_accounts.objects.get(id=user_id)
+            user = user_accounts.objects.get(user_id=user_id)
             if user.status:
-                user.balance = new_balance
+                user.user_balance = new_balance
                 user.save()
                 response['status'] = "SUCCESS"
             else:
@@ -106,13 +106,13 @@ def editUserBalance(request):
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except ObjectDoesNotExist:
         response['errorMessage'] = "用户不存在"
-        return JsonResponse(response, status=404)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -131,7 +131,7 @@ def queryUsers(request):
         user_list = []
         for user in users:
             user_map = {
-                'userId': user.user_id,
+                'userID': user.user_id,
                 'userEmail': user.user_email,
                 'userName': user.user_name,
                 'userBalance': user.user_balance,
@@ -141,6 +141,6 @@ def queryUsers(request):
         response['userList'], response['status'] = user_list, "SUCCESS"
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)

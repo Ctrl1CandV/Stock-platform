@@ -166,25 +166,6 @@ def valuation_ratio_charts(stock_code):
     return image_base64
 
 def financial_metric_form(stock_code):
-    financial_metric_dict = {
-        'ann_date': '公告日期',
-        'profit_dedt': '扣非净利润(元)',
-        'q_profit_yoy': ' 净利润同比增长率(%)(单季度)',
-        'or_yoy': '营业收入同比增长率(%)',
-        'bps': '每股净资产(元)',
-        'cfps': '每股现金流量净额(元)',
-        'roe': '净资产收益率(%)',
-        'ar_turn': '应收账款周转率(%)',
-        'grossprofit_margin': '销售毛利率(%)',
-        'revenue': '营业收入(元)',
-        'n_income_attr_p': ' 净利润(不含少数股东损益)(元)',
-        'basic_eps': ' 基本每股收益(元)',
-        'sell_exp': '销售费用(元)',
-        'admin_exp': '管理费用(元)',
-        'rd_exp': '研发费用(元)',
-        'fin_exp': '财务费用(元)',
-    }
-
     end_date = datetime.date.today()
     start_date = end_date - datetime.timedelta(days=400)
     start_date, end_date = start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')
@@ -197,5 +178,9 @@ def financial_metric_form(stock_code):
         fields='ann_date,revenue,n_income_attr_p,sell_exp,admin_exp,rd_exp,fin_exp,basic_eps'
     )
     merged_data = pd.merge(indicator_data, income_data, on='ann_date', how='inner')
-    merged_data = merged_data.rename(columns=financial_metric_dict)
-    return merged_data.to_dict(orient='list')
+    return merged_data.to_dict(orient='records')
+
+if __name__ == '__main__':
+    stock_code = '002236.SZ'
+    # print(financial_metric_form(stock_code))
+    valuation_ratio_charts(stock_code)

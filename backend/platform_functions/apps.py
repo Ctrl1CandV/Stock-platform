@@ -29,7 +29,6 @@ class StockPlatformConfig(AppConfig):
             self.on_startup()
 
     def on_startup(self):
-        pass
-        # from .stock_basic_views import updateStockBasic
-        # updateStockBasic()
-        # cleanModelData()
+        from .stock_basic_views import updateStockBasic
+        updateStockBasic()
+        cleanModelData()

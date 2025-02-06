@@ -21,6 +21,9 @@ pro = ts.pro_api(token)
 此外还需要进行股票列表的更新，设定为启动runserver时自动调用
 '''
 def tradable():
+    # 方便测试
+    return True
+
     now = datetime.datetime.now().time()
     is_trading_time = ((time(9, 30) <= now <= time(11, 30)) or
                        (time(13, 0) <= now <= time(15, 0)))
@@ -72,26 +75,25 @@ def isTrading(request):
     ''' 判断当前是否可以交易 '''
 
     response = {
-        'status': False,
+        'status': 'ERROR',
         'errorMessage': None,
         'perPrice': 0
     }
     try:
         if tradable():
             # 仅当可交易时，返回最新的每股价格
-            body = json.loads(request.body.decode('utf-8'))
-            stock_code = body.get('stockCode')
+            stock_code = request.GET.get('stockCode')
             quote = ts.realtime_quote(ts_code=stock_code)
-            response['status'], response['perPrice'] = True, quote['PRICE'][0]
+            response['status'], response['perPrice'] = 'SUCCESS', round(quote['PRICE'][0], 2)
         else:
             response['errorMessage'] = "不可交易"
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -109,20 +111,29 @@ def queryStockByName(request):
     try:
         search_name = request.GET.get('stockName')
         stock_basics = stock_basic.objects.filter(stock_name__contains=search_name)
+        if not stock_basics.exists():
+            response['errorMessage'] = "查询结果为空"
+            return JsonResponse(response)
 
         stock_information_list = []
         for stock in stock_basics:
-            stock_information_map = model_to_dict(stock, fields=['stockCode', 'stockName', 'industry', 'area', 'listDate'])
+            stock_information_map = {
+                'stockCode': stock.stock_code,
+                'stockName': stock.stock_name,
+                'industry': stock.industry,
+                'area': stock.area,
+                'listDate': stock.list_date
+            }
             stock_information_list.append(stock_information_map)
 
         response['status'], response['stockInformationList'] = 'SUCCESS', stock_information_list
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -140,18 +151,24 @@ def queryStockByCode(request):
     try:
         search_code = request.GET.get('stockCode')
         stock = stock_basic.objects.get(stock_code=search_code)
-        stock_information = model_to_dict(stock, fields=['stockCode', 'stockName', 'industry', 'area', 'listDate'])
-        response['status'], response['stockInformation'] = 'SUCCESS', stock_information
+        stock_information = {
+                'stockCode': stock.stock_code,
+                'stockName': stock.stock_name,
+                'industry': stock.industry,
+                'area': stock.area,
+                'listDate': stock.list_date
+            }
+        response['status'], response['stockInformation'] = 'SUCCESS', [stock_information]
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except ObjectDoesNotExist:
         response['errorMessage'] = "该股票代码不存在"
-        return JsonResponse(response, status=404)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -163,7 +180,8 @@ def buyStock(request):
     response = {
         'status': 'ERROR',
         'errorMessage': None,
-        'userID': None
+        'userID': None,
+        'amountSpent': None
     }
     try:
         body = json.loads(request.body.decode('utf-8'))
@@ -174,25 +192,25 @@ def buyStock(request):
         # 交易时间判断
         if not tradable():
             response['errorMessage'] = "当前时间不允许交易"
-            return JsonResponse(response, status=400)
+            return JsonResponse(response)
 
         # 购买数量区间判断
         if buy_number < 0 or buy_number > 10000:
             response['errorMessage'] = "购买数量超出可交易区间"
-            return JsonResponse(response, status=400)
+            return JsonResponse(response)
 
         # 余额判断
         quote = ts.realtime_quote(ts_code=stock_code)
         if quote.empty or 'PRICE' not in quote:
             response['errorMessage'] = "无法获取股票实时价格"
-            return JsonResponse(response, status=400)
+            return JsonResponse(response)
 
-        per_price = quote['PRICE'][0]
+        per_price = round(quote['PRICE'][0], 2)
         total_amount = per_price * buy_number
         user = user_accounts.objects.get(user_id=user_id)
         if user.user_balance < total_amount:
             response['errorMessage'] = "用户余额不足"
-            return JsonResponse(response, status=400)
+            return JsonResponse(response)
 
         with (transaction.atomic()):
             stock_information = stock_basic.objects.get(stock_code=stock_code)
@@ -230,17 +248,17 @@ def buyStock(request):
             user.user_balance -= total_amount
             user.save()
 
-            response['status'], response['userID'] = "SUCCESS", user.user_id
+            response['status'], response['userID'], response['amountSpent'] = "SUCCESS", user.user_id, total_amount
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except ObjectDoesNotExist:
         response['errorMessage'] = "该股票记录不存在"
-        return JsonResponse(response, status=404)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -252,7 +270,8 @@ def sellStock(request):
     response = {
         'status': 'ERROR',
         'errorMessage': None,
-        'userID': None
+        'userID': None,
+        'gain': 0
     }
     try:
         body = json.loads(request.body.decode('utf-8'))
@@ -263,17 +282,18 @@ def sellStock(request):
         # 交易时间判断
         if not tradable():
             response['errorMessage'] = "当前时间不允许交易"
-            return JsonResponse(response, status=400)
+            return JsonResponse(response)
 
         if sell_number > user_ownership.hold_number:
             response['errorMessage'] = "超出持有股的数量区间"
-            return JsonResponse(response, status=400)
+            return JsonResponse(response)
 
         with transaction.atomic():
-            user = user_accounts.objects.get(user_id=user_ownership.user_id)
+            user = user_ownership.user_id
             quote = ts.realtime_quote(ts_code=user_ownership.stock_code)
             new_per_price = quote['PRICE'][0]
 
+            gain = (new_per_price - user_ownership.purchase_per_price) * sell_number
             # 创建交易记录
             stock_transactions.objects.create(
                 transaction_type=1,
@@ -282,7 +302,7 @@ def sellStock(request):
                 stock_name=user_ownership.stock_name,
                 transaction_number=sell_number,
                 per_price=new_per_price,
-                gains=(new_per_price - user_ownership.purchase_per_price) * sell_number
+                gains=gain
             )
 
             # 更改持有股记录和用户余额
@@ -292,16 +312,16 @@ def sellStock(request):
                 user_ownership.delete()
             user.user_balance += new_per_price * sell_number
             user.save()
-            response['status'], response['userID'] = "SUCCESS", user.user_id
+            response['status'], response['userID'], response['gain'] = "SUCCESS", user.user_id, gain
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except ObjectDoesNotExist:
         response['errorMessage'] = "该持有股记录不存在"
-        return JsonResponse(response, status=404)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)

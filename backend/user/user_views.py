@@ -34,7 +34,7 @@ def register(request):
         with transaction.atomic():
             if user_accounts.objects.filter(user_email=user_email).exists():
                 response['errorMessage'] = "邮箱已注册"
-                return JsonResponse(response, status=400)
+                return JsonResponse(response)
 
             # 验证邮箱，创建用户
             validate_email(user_email)
@@ -49,13 +49,13 @@ def register(request):
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except EmailNotValidError as e:
         response['errorMessage'] = f"邮箱格式错误: {str(e)}"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -80,17 +80,17 @@ def login(request):
             response['status'], response['user'] = 'SUCCESS', model_to_dict(user)
         else:
             response['errorMessage'] = "密码错误"
-            return JsonResponse(response, status=401)
+            return JsonResponse(response)
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except ObjectDoesNotExist:
         response['errorMessage'] = "用户不存在"
-        return JsonResponse(response, status=404)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -110,13 +110,13 @@ def gainUserInformation(request):
         response['status'], response['user'] = 'SUCCESS', model_to_dict(user, exclude=['user_password'])
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except ObjectDoesNotExist:
         response['errorMessage'] = "用户不存在"
-        return JsonResponse(response, status=404)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -149,13 +149,13 @@ def updateProfile(request):
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except ObjectDoesNotExist:
         response['errorMessage'] = "用户不存在"
-        return JsonResponse(response, status=404)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -182,13 +182,13 @@ def updateBalance(request):
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except ObjectDoesNotExist:
         response['errorMessage'] = "用户不存在"
-        return JsonResponse(response, status=404)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -218,17 +218,17 @@ def changePassword(request):
                 response['userID'] = user.user_id
             else:
                 response['errorMessage'] = "旧密码错误"
-                return JsonResponse(response, status=401)
+                return JsonResponse(response)
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except ObjectDoesNotExist:
         response['errorMessage'] = "用户不存在"
-        return JsonResponse(response, status=404)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -246,23 +246,26 @@ def getStockOwnership(request):
     try:
         user_id = request.GET.get('userID')
         stock_ownerships = stock_ownership.objects.filter(user_id=user_id)
+        if not stock_ownerships.exists():
+            response['errorMessage'] = "查询不到持仓"
+            return JsonResponse(response)
 
         stock_ownership_list = []
         for ownership in stock_ownerships:
-            stock_ownership_map = model_to_dict(ownership, fields=['stock_code', 'stock_name', 'hold_nunmber', 'purchase_per_price'])
+            stock_ownership_map = model_to_dict(ownership, fields=['ownership_id', 'stock_code', 'stock_name', 'hold_number', 'purchase_per_price'])
             stock_ownership_list.append(stock_ownership_map)
 
         response['status'], response['stockOwnershipList'] = "SUCCESS", stock_ownership_list
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except ObjectDoesNotExist:
         response['errorMessage'] = "用户不存在"
-        return JsonResponse(response, status=404)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -291,12 +294,12 @@ def getTransactionRecords(request):
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except ObjectDoesNotExist:
         response['errorMessage'] = "用户不存在"
-        return JsonResponse(response, status=404)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)

@@ -56,7 +56,7 @@ def updateAnnualDailyQuotes(request):
         print(f"{stock_code}的年度日线行情已保存本地")
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except Exception as e:
         print(f"股票年度日线行情更新失败: {str(e)}")
 
@@ -83,10 +83,10 @@ def showStockQurve(request):
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -107,10 +107,10 @@ def showTechnicalIndicator(request):
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -131,11 +131,10 @@ def getFinancialMetric(request):
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -156,9 +155,9 @@ def showValuationRatio(request):
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)

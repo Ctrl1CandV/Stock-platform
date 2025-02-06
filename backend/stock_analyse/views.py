@@ -44,10 +44,10 @@ def forecastStock(request):
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -76,10 +76,10 @@ def showZScore(request):
         cache.set(cache_key, response, timeout=60 * 60)
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response)
 
     return JsonResponse(response)
 
@@ -121,9 +121,9 @@ def showSharpeRatio(request):
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response, status=400)
+        return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)
-        return JsonResponse(response, status=500)
+        return JsonResponse(response0)
 
     return JsonResponse(response)
