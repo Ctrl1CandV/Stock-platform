@@ -4,8 +4,12 @@ from django.http import JsonResponse
 from . import stock_detail_functions
 from django.db import transaction
 from .models import stock_market
+import tushare as ts
 import datetime
 import json
+
+token = '66e72ae286def4e5826d1edc84f45cdad596c34137a91396b335cefd'
+pro = ts.pro_api(token)
 
 '''
 股票详细页面的显示内容包含
@@ -152,6 +156,30 @@ def showValuationRatio(request):
         stock_code = request.GET.get('stockCode')
         image = stock_detail_functions.valuation_ratio_charts(stock_code)
         response['status'], response['valuationRatioImage'] = 'SUCCESS', image
+
+    except json.JSONDecodeError:
+        response['errorMessage'] = "无效的JSON负载"
+        return JsonResponse(response)
+    except Exception as e:
+        response['errorMessage'] = str(e)
+        return JsonResponse(response)
+
+    return JsonResponse(response)
+
+@csrf_exempt
+@require_http_methods(['GET'])
+def gainIntroduction(request):
+    ''' 获取公司简介信息 '''
+
+    response = {
+        'status': 'ERROR',
+        'errorMessage': None,
+        'introduction': None,
+    }
+    try:
+        stock_code = request.GET.get('stockCode')
+        introduction = pro.stock_company(ts_code=stock_code, fields='ts_code,introduction')["introduction"][0]
+        response['status'], response['introduction'] = 'SUCCESS', introduction
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"

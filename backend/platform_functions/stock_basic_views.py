@@ -9,7 +9,10 @@ from datetime import time
 import tushare as ts
 import datetime
 import json
+import os
 
+from dotenv import load_dotenv
+load_dotenv()
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -21,6 +24,10 @@ pro = ts.pro_api(token)
 此外还需要进行股票列表的更新，设定为启动runserver时自动调用
 '''
 def tradable():
+    # 测试模式不检查是否能够交易
+    if os.getenv("RUN_MODE") == "TEST":
+        return True
+
     now = datetime.datetime.now().time()
     is_trading_time = ((time(9, 30) <= now <= time(11, 30)) or
                        (time(13, 0) <= now <= time(15, 0)))

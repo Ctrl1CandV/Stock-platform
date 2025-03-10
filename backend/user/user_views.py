@@ -107,6 +107,7 @@ def gainUserInformation(request):
     try:
         user_id = request.GET.get('userID')
         user = user_accounts.objects.get(user_id=user_id)
+        user.user_balance = round(user.user_balance, 2)
         response['status'], response['user'] = 'SUCCESS', model_to_dict(user, exclude=['user_password'])
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
@@ -253,6 +254,7 @@ def getStockOwnership(request):
         stock_ownership_list = []
         for ownership in stock_ownerships:
             stock_ownership_map = model_to_dict(ownership, fields=['ownership_id', 'stock_code', 'stock_name', 'hold_number', 'purchase_per_price'])
+            stock_ownership_map['purchase_per_price'] = round(stock_ownership_map['purchase_per_price'], 2)
             stock_ownership_list.append(stock_ownership_map)
 
         response['status'], response['stockOwnershipList'] = "SUCCESS", stock_ownership_list
@@ -289,6 +291,7 @@ def getTransactionRecords(request):
                 user_transaction,
                 fields=['transaction_type', 'stock_code', 'stock_name', 'transaction_number', 'per_price', 'gains']
             )
+            stock_transaction_map['gains'] = round(stock_transaction_map['gains'], 5)
             stock_transaction_list.append(stock_transaction_map)
         response['status'], response['stockTransactionList'] = "SUCCESS", stock_transaction_list
 

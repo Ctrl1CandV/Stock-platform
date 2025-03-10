@@ -1,6 +1,7 @@
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from platform_functions.models import stock_market
+from decimal import Decimal, getcontext
 from django.http import JsonResponse
 from django.core.cache import cache
 from . import functions
@@ -39,7 +40,8 @@ def forecastStock(request):
             data = functions.pro.daily(ts_code=stock_code, start_date=start_date, end_date=end_date)
             gain_rate, result = functions.forecast_result(stock_code, data)
 
-        response['status'], response['result'], response['gainRate'] = 'SUCCESS', float(result), float(gain_rate)
+        result, gain_rate = round(float(result), 4), round(float(gain_rate), 5)
+        response['status'], response['result'], response['gainRate'] = 'SUCCESS', result, gain_rate
         cache.set(cache_key, response, timeout=60 * 60)
 
     except json.JSONDecodeError:

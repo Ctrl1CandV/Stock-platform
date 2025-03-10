@@ -69,13 +69,13 @@ def calculate_Zscore(stock_code):
     total_assets = (merged_data['revenue'] / merged_data['assets_turn']).mean() / 10000
 
     # 计算Z分模型的最终得分
-    X1 = (total_cur_assets - total_cur_liab) / total_assets
-    X2 = retained_earnings / total_assets
-    X3 = (total_profit + finan_exp) / total_assets
-    X4 = total_mv / (total_cur_liab + total_ncl)
-    X5 = revenue / total_assets
+    X1 = (total_cur_assets - total_cur_liab) * 100 / total_assets
+    X2 = retained_earnings * 100 / total_assets
+    X3 = (total_profit + finan_exp) * 100 / total_assets
+    X4 = total_mv * 100 / (total_cur_liab + total_ncl)
+    X5 = revenue * 100 / total_assets
     z_score = 0.012 * X1 + 0.014 * X2 + 0.033 * X3 + 0.006 * X4 + 0.999 * X5
-    return  z_score, [X1, X2, X3, X4, X5]
+    return  round(z_score, 4), [X1, X2, X3, X4, X5]
 
 def crawling_riskfree_rate():
     # 爬取数据
@@ -105,7 +105,7 @@ def calculate_sharpe_ratio(rate, data):
     data = data / 100
     mean, std = np.mean(data), np.std(data)
     sharpe_ratio = (mean - rate) / std
-    return mean, sharpe_ratio
+    return mean, round(sharpe_ratio, 2)
 
 if __name__ == '__main__':
     stock_code = '002558.SZ'
