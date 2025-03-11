@@ -2,6 +2,9 @@ from django.apps import AppConfig
 import shutil
 import os
 
+from dotenv import load_dotenv
+load_dotenv()
+
 '''
 由于Django项目启动重复加载的问题
 以下代码始终会运行多次，无法解决
@@ -21,14 +24,18 @@ def cleanModelData():
 class StockPlatformConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "platform_functions"
-    _startup_executed = False
 
-    def ready(self):
-        if not self._startup_executed:
-            _startup_executed = True
-            self.on_startup()
+    if os.getenv('RUN_MODE') == 'TEST':
+        pass
+    else:
+        _startup_executed = False
 
-    def on_startup(self):
-        from .stock_basic_views import updateStockBasic
-        updateStockBasic()
-        cleanModelData()
+        def ready(self):
+            if not self._startup_executed:
+                _startup_executed = True
+                self.on_startup()
+
+        def on_startup(self):
+            from .stock_basic_views import updateStockBasic
+            updateStockBasic()
+            cleanModelData()
