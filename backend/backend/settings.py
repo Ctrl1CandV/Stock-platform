@@ -15,6 +15,10 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -23,9 +27,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-9kti@a^&mswr-tjosdgmsis)ososivawkuwt-5&u1bpu&-*+u-"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
 
 
 # Application definition
@@ -87,10 +91,11 @@ DATABASES = {
         'NAME': 'stockplatform',
         'USER': 'root',
         'PASSWORD': 'mysql',
-        'HOST': '127.0.0.1',
+        'HOST': 'database' if os.getenv('RUN_ENVIRONMENT') == 'DOCKER' else 'localhost',
         'PORT': '3306',
     }
 }
+print(DATABASES)
 
 
 # Password validation
