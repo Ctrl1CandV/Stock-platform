@@ -24,18 +24,14 @@ def cleanModelData():
 class StockPlatformConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "platform_functions"
+    _startup_executed = False
 
-    if os.getenv('RUN_MODE') == 'TEST':
-        pass
-    else:
-        _startup_executed = False
+    def ready(self):
+        if not self._startup_executed:
+            _startup_executed = True
+            self.on_startup()
 
-        def ready(self):
-            if not self._startup_executed:
-                _startup_executed = True
-                self.on_startup()
-
-        def on_startup(self):
-            from .stock_basic_views import updateStockBasic
-            updateStockBasic()
-            cleanModelData()
+    def on_startup(self):
+        from .stock_basic_views import updateStockBasic
+        updateStockBasic()
+        cleanModelData()

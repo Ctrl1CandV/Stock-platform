@@ -43,6 +43,12 @@ def updateStockBasic():
     ''' 更新股票列表 '''
 
     try:
+        stock_basic.objects.first()
+    except Exception as db_error:
+        print(f"数据库未准备好，可能是数据迁移尚未完成: {str(db_error)}\n" + "请先完成数据迁移后再进行股票列表更新")
+        return
+
+    try:
         new_stock_basic = pro.stock_basic(
             exchange='', list_status='L',
             fields='ts_code, name, area, industry, list_date'

@@ -29,7 +29,7 @@ def register(request):
         body = json.loads(request.body.decode('utf-8'))
         user_email = body.get('userEmail')
         user_name = body.get('userName')
-        user_password = body.get('userPassword')
+        user_password = body.get('password')
 
         with transaction.atomic():
             if user_accounts.objects.filter(user_email=user_email).exists():
@@ -73,7 +73,7 @@ def login(request):
     try:
         body = json.loads(request.body.decode('utf-8'))
         user_email = body.get('userAccount')
-        user_password =body.get('password')
+        user_password = body.get('password')
 
         user = user_accounts.objects.get(user_email=user_email)
         if user.checkPassword(user_password):
