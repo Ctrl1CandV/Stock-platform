@@ -1,7 +1,6 @@
 import Vue from "vue";
 import Router from  'vue-router';
 import LoginPage from "@/components/LoginPage.vue";
-import RegisterPage from "@/components/RegisterPage.vue";
 import UserMain from "@/components/UserMain.vue";
 import HomePage from "@/components/HomePage.vue";
 import UserProfile from "@/components/UserProfile.vue";
@@ -19,11 +18,6 @@ export default new Router({
             path: '/login',
             name: 'Login',
             component: LoginPage,
-        },
-        {
-            path: '/register',
-            name: 'Register',
-            component: RegisterPage,
         },
         {
             path: '/user',

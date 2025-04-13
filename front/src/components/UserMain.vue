@@ -59,20 +59,28 @@ export default {
   },
   methods: {
     handleLogout() {
-      console.log(this.userID);
       localStorage.removeItem('userID');
       this.$router.push('/login');
     },
     goToHomePage() {
-      this.$router.push('/user');
+      this.$router.push('/user').catch(err => {
+        if (err.name !== 'NavigationDuplicated') {
+          throw err;
+        }});
       this.activeMenu = '1';
     },
     goToOwnershipSearch() {
-      this.$router.push('/user/ownership');
+      this.$router.push('/user/ownership').catch(err => {
+        if (err.name !== 'NavigationDuplicated') {
+          throw err;
+        }});
       this.activeMenu = '2';
     },
     goToTransactionSearch() {
-      this.$router.push('/user/transaction');
+      this.$router.push('/user/transaction').catch(err => {
+        if (err.name !== 'NavigationDuplicated') {
+          throw err;
+        }});
       this.activeMenu = '3';
     }
   },

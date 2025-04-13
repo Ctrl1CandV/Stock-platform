@@ -17,6 +17,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 token = '66e72ae286def4e5826d1edc84f45cdad596c34137a91396b335cefd'
+ts.set_token(token)
 pro = ts.pro_api(token)
 
 '''
@@ -31,7 +32,7 @@ def tradable():
     now = datetime.datetime.now().time()
     is_trading_time = ((time(9, 30) <= now <= time(11, 30)) or
                        (time(13, 0) <= now <= time(15, 0)))
-
+    
     if is_trading_time:
         today = datetime.datetime.today().strftime("%Y%m%d")
         trading = pro.trade_cal(exchange='', start_date=today, end_date=today)['is_open'][0]
