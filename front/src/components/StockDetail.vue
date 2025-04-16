@@ -250,7 +250,6 @@ export default {
         });
         if (response.data.status === 'SUCCESS') {
           this.stockIntroduction = response.data.introduction;
-          console.log(this.stockIntroduction);
         } else if (response.data.status === 'ERROR') {
           alert('公司简介获取失败:' + response.data.errorMessage);
         }
@@ -333,7 +332,6 @@ export default {
         if (response.data.status === 'SUCCESS') {
           this.nextClose = response.data.result;
           this.gainRate = response.data.gainRate;
-          console.log('Transformer预测成功');
         } else if (response.data.status === 'ERROR') {
           alert('Transformer预测失败:' + response.data.errorMessage);
         }
@@ -349,7 +347,6 @@ export default {
         if (response.data.status === 'SUCCESS') {
           this.zScore = response.data.zScore;
           this.X = response.data.X;
-          console.log('Z分模型得分计算成功');
         } else if (response.data.status === 'ERROR') {
           alert('Z分模型得分计算失败:' + response.data.errorMessage);
         }
@@ -365,7 +362,6 @@ export default {
         if (response.data.status === 'SUCCESS') {
           this.sharpeRatio = response.data.sharpeRatio;
           this.rateMap = response.data.rateMap;
-          console.log('夏普比率计算成功');
         } else if (response.data.status === 'ERROR') {
           alert('夏普比率计算失败:' + response.data.errorMessage);
         }

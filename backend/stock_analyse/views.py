@@ -4,8 +4,10 @@ from platform_functions.models import stock_market
 from decimal import Decimal, getcontext
 from django.http import JsonResponse
 from django.core.cache import cache
+from django.utils import timezone
 from . import functions
 import pandas as pd
+import numpy as np
 import datetime
 import json
 
@@ -34,7 +36,7 @@ def forecastStock(request):
             data = pd.DataFrame(list(stock_markets.values()))
             gain_rate, result = functions.forecast_result(stock_code, data)
         else:
-            end_date = datetime.date.today()
+            end_date = timezone.now().date()
             start_date = end_date - datetime.timedelta(days=500)
             start_date, end_date = start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')
             data = functions.pro.daily(ts_code=stock_code, start_date=start_date, end_date=end_date)
@@ -74,6 +76,11 @@ def showZScore(request):
             return JsonResponse(cache_result)
 
         z_score, X = functions.calculate_Zscore(stock_code)
+        # 缺值判断和处理
+        z_score = "数据缺失" if np.isnan(z_score) else round(float(z_score), 4)
+        for i in range(len(X)):
+            X[i] = np.float64(0) if np.isnan(X[i]) else round(float(X[i]), 4)
+            
         response['status'], response['zScore'], response['X'] = 'SUCCESS', z_score, X
         cache.set(cache_key, response, timeout=60 * 60)
     except json.JSONDecodeError:
@@ -110,7 +117,7 @@ def showSharpeRatio(request):
         if stock_markets.exists():
             data = pd.DataFrame(list(stock_markets.values()))
         else:
-            end_date = datetime.date.today()
+            end_date = timezone.now().date()
             start_date = end_date - datetime.timedelta(days=500)
             start_date, end_date = start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')
             data = functions.pro.daily(ts_code=stock_code, start_date=start_date, end_date=end_date)

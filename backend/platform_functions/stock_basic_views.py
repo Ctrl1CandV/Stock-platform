@@ -1,13 +1,15 @@
-from .models import user_accounts, stock_basic, stock_ownership, stock_transactions
+from .models import user_accounts, stock_basic, stock_ownership, stock_transactions, stock_market, user_favorite_stocks
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
+from stock_analyse.functions import get_previous_workday
 from django.core.exceptions import ObjectDoesNotExist
+from django.views.decorators.csrf import csrf_exempt
 from django.forms.models import model_to_dict
 from django.http import JsonResponse
+from django.core.cache import cache
 from django.db import transaction
+from django.utils import timezone
 from datetime import time
 import tushare as ts
-import datetime
 import json
 import os
 
@@ -29,12 +31,12 @@ def tradable():
     if os.getenv("RUN_MODE") == "TEST":
         return True
 
-    now = datetime.datetime.now().time()
+    now = timezone.now().time()
     is_trading_time = ((time(9, 30) <= now <= time(11, 30)) or
                        (time(13, 0) <= now <= time(15, 0)))
     
     if is_trading_time:
-        today = datetime.datetime.today().strftime("%Y%m%d")
+        today = timezone.now().strftime("%Y%m%d")
         trading = pro.trade_cal(exchange='', start_date=today, end_date=today)['is_open'][0]
         return bool(trading)
     else:
@@ -79,6 +81,15 @@ def updateStockBasic():
         print("股票列表更新成功")
     except Exception as e:
         print(f"股票列表更新失败: {str(e)}")
+
+def cleanMarket():
+    ''' 清理stock_market表  '''
+    try:
+        with transaction.atomic():
+            stock_market.objects.all().delete()
+        print("stock_market表已成功清除")
+    except Exception as e:
+        print(f"清除stock_market表错误: {str(e)}")
 
 @csrf_exempt
 @require_http_methods(['GET'])
@@ -259,7 +270,7 @@ def buyStock(request):
             user.user_balance -= total_amount
             user.save()
 
-            response['status'], response['userID'], response['amountSpent'] = "SUCCESS", user.user_id, total_amount
+            response['status'], response['userID'], response['amountSpent'] = "SUCCESS", user.user_id, round(float(total_amount), 2)
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
@@ -323,13 +334,140 @@ def sellStock(request):
                 user_ownership.delete()
             user.user_balance += new_per_price * sell_number
             user.save()
-            response['status'], response['userID'], response['gain'] = "SUCCESS", user.user_id, gain
+            response['status'], response['userID'], response['gain'] = "SUCCESS", user.user_id, round(float(gain), 2)
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
         return JsonResponse(response)
     except ObjectDoesNotExist:
         response['errorMessage'] = "该持有股记录不存在"
+        return JsonResponse(response)
+    except Exception as e:
+        response['errorMessage'] = str(e)
+        return JsonResponse(response)
+
+    return JsonResponse(response)
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def addFavoriteStock(request):
+    ''' 添加持有股 '''
+
+    response = {
+        'status': 'ERROR',
+        'errorMessage': None,
+    }
+    try:
+        body = json.loads(request.body.decode('utf-8'))
+        user_id = body.get('userID')
+        stock_code = body.get('stockCode')
+        user_account = user_accounts.objects.get(user_id=user_id)
+
+        # 进行数量和唯一性判断
+        favorite_stocks = user_favorite_stocks.objects.filter(user_id=user_account)
+        if favorite_stocks.exists():
+            if favorite_stocks.count() > 50:
+                response['errorMessage'] = "自选股数量已达上限"
+                return JsonResponse(response)
+            
+            if favorite_stocks.filter(stock_code=stock_code).exists():
+                response['errorMessage'] = "该股票已在自选股中"
+                return JsonResponse(response)
+        
+        with transaction.atomic():
+            user_favorite_stocks.objects.create(
+                user_id=user_account,
+                stock_code=stock_code
+            )
+
+        response['status'] = 'SUCCESS'
+    except json.JSONDecodeError:
+        response['errorMessage'] = "无效的JSON负载"
+        return JsonResponse(response)
+    except Exception as e:
+        response['errorMessage'] = str(e)
+        return JsonResponse(response)
+
+    return JsonResponse(response)
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def removeFavoriteStock(request):
+    ''' 删除持有股 '''
+
+    response = {
+       'status': 'ERROR',
+       'errorMessage': None,
+    }
+    try:
+        body = json.loads(request.body.decode('utf-8'))
+        user_id = body.get('userID')
+        stock_code = body.get('stockCode')
+        user_account = user_accounts.objects.get(user_id=user_id)
+        
+        removeStock = user_favorite_stocks.objects.filter(
+            user_id=user_account,
+            stock_code=stock_code
+        )
+        if removeStock.exists():
+            with transaction.atomic():
+                removeStock.delete()
+            response['status'] = 'SUCCESS'
+        else:
+            response['errorMessage'] = "该股票不在自选股中"
+
+    except json.JSONDecodeError:
+        response['errorMessage'] = "无效的JSON负载"
+        return JsonResponse(response)
+    except Exception as e:
+        response['errorMessage'] = str(e)
+        return JsonResponse(response)
+
+    return JsonResponse(response)
+
+@csrf_exempt
+@require_http_methods(['GET'])
+def loadHomePageData(request):
+    ''' 加载搜索主页的信息 '''
+
+    response = {
+       'status': 'ERROR',
+       'errorMessage': None,
+       'ShanghaiTop10': None,
+       'ShenzhenTop10': None,
+       'newsInformation': None,
+       'significantIndex': None
+    }
+    try:
+        Shanghai_top10, Shenzhen_top10 = {}, {}
+        news_information, significant_index = {}, {}
+        trade_date = get_previous_workday()
+
+        # 获取前一日的十大成交股
+        Shanghai_data = pro.hsgt_top10(trade_date=trade_date, market_type='1')[['name', 'amount']].sort_values('amount', ascending=False)
+        Shenzhen_data = pro.hsgt_top10(trade_date=trade_date, market_type='3')[['name', 'amount']].sort_values('amount', ascending=False)
+        Shanghai_data['amount'], Shenzhen_data['amount'] = Shanghai_data['amount'].apply(lambda x: f'{x / 100000000:.2f}亿'), Shenzhen_data['amount'].apply(lambda x: f'{x / 100000000:.2f}亿')
+        Shanghai_top10, Shenzhen_top10 = Shanghai_data.set_index('name')['amount'].to_dict(), Shenzhen_data.set_index('name')['amount'].to_dict()
+
+        # 获取新闻信息
+        news_cache_key = f"stock_news_{timezone.now().strftime('%Y-%m-%d')}"
+        try:
+            news_data = pro.news(src='eastmoney', start_date=timezone.now().strftime('%Y-%m-%d') + ' 00:00:00', fields='datetime,content').head(10)
+            news_information = news_data.set_index('datetime')['content'].to_dict()
+            cache.set(news_cache_key, news_information, timeout=24 * 3600)
+        except:
+            news_information = cache.get(news_cache_key)
+
+        # 获取上证指数、深证成指、创业板指的最新行情
+        shanghai, SZSE, GEM = pro.index_daily(ts_code='000001.SH', trade_date=trade_date).iloc[0], pro.index_daily(ts_code='399001.SZ', trade_date=trade_date).iloc[0], pro.index_daily(ts_code='399006.SZ', trade_date=trade_date).iloc[0]
+        significant_index['上证指数'] = round((shanghai['close'] - shanghai['pre_close']) / shanghai['pre_close'] * 100, 4)
+        significant_index['深证成指'] = round((SZSE['close'] - SZSE['pre_close']) / SZSE['pre_close'] * 100, 4)
+        significant_index['创业板指'] = round((GEM['close'] - GEM['pre_close']) / GEM['pre_close'] * 100, 4)
+
+        response['status'], response['ShanghaiTop10'], response['ShenzhenTop10'], response['newsInformation'], response['significantIndex'] = 'SUCCESS', Shanghai_top10, Shenzhen_top10, news_information, significant_index
+    except json.JSONDecodeError:
+        response['errorMessage'] = "无效的JSON负载"
         return JsonResponse(response)
     except Exception as e:
         response['errorMessage'] = str(e)

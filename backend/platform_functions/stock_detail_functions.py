@@ -1,4 +1,5 @@
 from dateutil.relativedelta import relativedelta
+from django.utils import timezone
 import matplotlib.pyplot as plt
 import mplfinance as mpf
 import pandas_ta as ta
@@ -57,7 +58,7 @@ def draw_market_chart(data, title):
     return image
 
 def get_stock_chart(stock_code, time_span, type):
-    end_date = datetime.date.today()
+    end_date = timezone.now().date()
     if type == 1:
         start_date = end_date - datetime.timedelta(days=time_span)
         data = pro.daily(ts_code=stock_code, start_date=start_date.strftime('%Y%m%d'), end_date=end_date.strftime('%Y%m%d'))
@@ -115,7 +116,7 @@ def plot_technical_indicator(data, indicator_name, title, color='blue'):
 
 def technical_indicator_charts(stock_code):
     # 获取数据
-    end_date = datetime.date.today()
+    end_date = timezone.now().date()
     start_date = end_date - datetime.timedelta(days=400)
     start_date, end_date = start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')
     data = pro.daily(ts_code=stock_code, start_date=start_date, end_date=end_date)
@@ -135,7 +136,7 @@ def technical_indicator_charts(stock_code):
 
 def valuation_ratio_charts(stock_code):
     # 获取数据并按照交易日期排序
-    end_date = datetime.date.today()
+    end_date = timezone.now().date()
     start_date = end_date - datetime.timedelta(days=400)
     start_date, end_date = start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')
     basic_stable = pro.daily_basic(
@@ -168,7 +169,7 @@ def valuation_ratio_charts(stock_code):
     return image_base64
 
 def financial_metric_form(stock_code):
-    end_date = datetime.date.today()
+    end_date = timezone.now().date()
     start_date = end_date - datetime.timedelta(days=400)
     start_date, end_date = start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')
     indicator_data = pro.fina_indicator(

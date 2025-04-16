@@ -1,5 +1,6 @@
 from .transformer_forecasts import forecasts_functions
 import chinese_calendar as calendar
+from django.utils import timezone
 from bs4 import BeautifulSoup
 import tushare as ts
 import pandas as pd
@@ -11,8 +12,8 @@ token = '66e72ae286def4e5826d1edc84f45cdad596c34137a91396b335cefd'
 pro = ts.pro_api(token)
 
 # 寻找最近工作日
-def get_previous_workday(date):
-    previous_day = datetime.datetime.strptime(date, '%Y%m%d') - datetime.timedelta(days=1)
+def get_previous_workday():
+    previous_day = timezone.now().date() - datetime.timedelta(days=1)
     while not calendar.is_workday(previous_day):
         previous_day -= datetime.timedelta(days=1)
     return previous_day.strftime('%Y%m%d')
@@ -30,7 +31,7 @@ def forecast_result(stock_code, data):
 
 def calculate_Zscore(stock_code):
     #  初始化参数
-    end_date = datetime.date.today()
+    end_date = timezone.now().date()
     start_date = end_date.replace(year=end_date.year - 1)
     start_date, end_date = start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')
     token = '66e72ae286def4e5826d1edc84f45cdad596c34137a91396b335cefd'
@@ -109,7 +110,7 @@ def calculate_sharpe_ratio(rate, data):
 
 if __name__ == '__main__':
     stock_code = '002558.SZ'
-    end_date = datetime.date.today()
+    end_date = timezone.now().date()
     start_date = end_date - datetime.timedelta(days=500)
     start_date, end_date = start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')
     data = pro.daily(ts_code=stock_code, start_date=start_date, end_date=end_date)

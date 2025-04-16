@@ -1,2 +1,3 @@
-from platform_functions.models import stock_ownership, stock_transactions
+from platform_functions.models import stock_ownership, stock_transactions, stock_basic
 from platform_functions.models import manager, user_accounts
+from platform_functions.models import user_favorite_stocks

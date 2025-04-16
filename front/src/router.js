@@ -8,6 +8,7 @@ import OwnershipSearch from "@/components/OwnershipSearch.vue";
 import TransactionSearch from "@/components/TransactionSearch.vue";
 import ManagerPage from "@/components/ManagerPage.vue";
 import StockDetail from "@/components/StockDetail.vue";
+import WatchlistedPage from "@/components/WatchlistedPage.vue";
 
 Vue.use(Router);
 
@@ -28,6 +29,7 @@ export default new Router({
                 { path: 'profile', component: UserProfile },
                 { path: 'ownership', component: OwnershipSearch },
                 { path: 'transaction', component: TransactionSearch },
+                { path: 'watchlist', component: WatchlistedPage },
                 { path: 'stock', component: StockDetail },
             ]
         },

@@ -21,6 +21,10 @@
           <i class="el-icon-setting"></i>
           <span slot="title">交易记录查询</span>
         </el-menu-item>
+        <el-menu-item index="4" @click="goToWatchlistedPage">
+          <i class="el-icon-setting"></i>
+          <span slot="title">自选股信息</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 
@@ -62,27 +66,34 @@ export default {
       localStorage.removeItem('userID');
       this.$router.push('/login');
     },
-    goToHomePage() {
-      this.$router.push('/user').catch(err => {
+    async goToHomePage() {
+      await this.$router.push('/user').catch(err => {
         if (err.name !== 'NavigationDuplicated') {
           throw err;
         }});
       this.activeMenu = '1';
     },
-    goToOwnershipSearch() {
-      this.$router.push('/user/ownership').catch(err => {
+    async goToOwnershipSearch() {
+      await this.$router.push('/user/ownership').catch(err => {
         if (err.name !== 'NavigationDuplicated') {
           throw err;
         }});
       this.activeMenu = '2';
     },
-    goToTransactionSearch() {
-      this.$router.push('/user/transaction').catch(err => {
+    async goToTransactionSearch() {
+      await this.$router.push('/user/transaction').catch(err => {
         if (err.name !== 'NavigationDuplicated') {
           throw err;
         }});
       this.activeMenu = '3';
-    }
+    },
+    async goToWatchlistedPage() {
+      await this.$router.push('/user/watchlist').catch(err => {
+        if (err.name!== 'NavigationDuplicated') {
+          throw err;
+        }});
+      this.activeMenu = '4';
+    },
   },
   watch: {
     '$route': function (to) {
@@ -93,6 +104,8 @@ export default {
         this.activeMenu = '2';
       } else if (to.path === '/user/transaction') {
         this.activeMenu = '3';
+      } else if (to.path === '/user/watchlist') {
+        this.activeMenu = '4';
       }
     }
   }

@@ -47,7 +47,9 @@
           </div>
           <div class="form-group">
             <label for="confirm-password">确认密码</label>
-            <input type="password" id="confirm-password" v-model="registerForm.confirmPassword" required />
+            <input type="password" id="confirm-password" v-model="registerForm.confirmPassword"
+              :class="{ 'input-error': passwordMismatch }" required />
+              <span v-if="passwordMismatch" class="error-message">密码不一致</span>
           </div>
           <button type="submit" class="btn-secondary">注册</button>
         </form>
@@ -75,6 +77,11 @@ export default {
         confirmPassword: '',
       }
     };
+  },
+  computed: {
+    passwordMismatch() {
+      return this.registerForm.password && this.registerForm.confirmPassword && this.registerForm.password !== this.registerForm.confirmPassword;
+    }
   },
   methods: {
     async handleLogin() {
@@ -113,10 +120,6 @@ export default {
       }
     },
     async handleRegister() {
-      if (this.registerForm.password !== this.registerForm.confirmPassword) {
-        alert('两次输入的密码不一致');
-        return;
-      }
       try {
         const response = await this.$axios.post('/user/register', {
           userEmail: this.registerForm.userEmail,
@@ -288,5 +291,18 @@ button {
   .auth-container {
     max-width: 90%;
   }
+}
+
+.input-error {
+  border-color: #f56c6c !important;
+  box-shadow: 0 0 0 2px rgba(245, 108, 108, 0.2) !important;
+}
+
+.error-message {
+  color: #f56c6c;
+  font-size: 12px;
+  margin-top: 5px;
+  display: block;
+  text-align: left;
 }
 </style>

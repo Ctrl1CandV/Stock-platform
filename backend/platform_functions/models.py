@@ -39,6 +39,16 @@ class user_accounts(models.Model):
     def checkPassword(self, row_password):
         return check_password(row_password, self.user_password)
 
+class user_favorite_stocks(models.Model):
+    favorite_stock_id = models.AutoField(primary_key=True)
+    user_id = models.ForeignKey(user_accounts, on_delete=models.CASCADE, db_column="user_id", related_name="favorite_stocks")
+    stock_code = models.CharField(max_length=9, null=False)
+    add_time = models.DateTimeField(auto_now_add=True, null=False)
+
+    class Meta:
+        db_table = "user_favorite_stocks"
+        verbose_name = "user favorite stocks"
+
 # 隔天更新，数据源来自Tushare的股票列表
 class stock_basic(models.Model):
     stock_code = models.CharField(max_length=9, primary_key=True)

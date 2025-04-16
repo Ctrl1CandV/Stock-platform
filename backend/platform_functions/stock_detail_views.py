@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from . import stock_detail_functions
 from django.db import transaction
+from django.utils import timezone
 from .models import stock_market
 import tushare as ts
 import datetime
@@ -29,7 +30,7 @@ def updateAnnualDailyQuotes(request):
         body = json.loads(request.body.decode('utf-8'))
         stock_code = body.get('stockCode')
 
-        end_date = datetime.date.today()
+        end_date = timezone.now().date()
         start_date = end_date - datetime.timedelta(days=500)
         start_date, end_date = start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')
         stock_daily = stock_detail_functions.pro.daily(ts_code=stock_code, start_date=start_date, end_date=end_date)
