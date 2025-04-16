@@ -18,11 +18,11 @@
         <div class="stock-info">
           <p v-if="stock.stockCode && stock.stockName">名称:{{ stock.stockName }} 代码:{{ stock.stockCode }}</p>
           <p v-if="stock.industry && stock.area">行业:{{ stock.industry }} 地域:{{ stock.area }}</p>
-          <p v-if="stock.listDate">上市时间:{{ stock.listDate }} <button @click="addFavoriteStock(stock.stockCode)"
-              class="favorite-btn">加入自选股</button></p>
+          <p v-if="stock.listDate">上市时间:{{ stock.listDate }} <button v-if="!isManager"
+              @click="addFavoriteStock(stock.stockCode)" class="favorite-btn">加入自选股</button></p>
         </div>
         <div class="stock-actions">
-          <button @click="openBuyModal(stock)">买入</button>
+          <button v-if="!isManager" @click="openBuyModal(stock)">买入</button>
           <button @click="toStock(stock)">详情</button>
         </div>
       </div>
@@ -78,7 +78,7 @@
         <h3>最新财经动态</h3>
         <div class="news-list">
           <div v-for="(content, datetime) in newsInformation" :key="datetime" class="news-item">
-            <div class="news-time">{{ formatDateTime(datetime) }}</div>
+            <div class="news-time">{{ datetime }}</div>
             <div class="news-content">{{ content }}</div>
           </div>
         </div>
@@ -118,10 +118,12 @@ export default {
       ShenzhenTop10: {},
       newsInformation: {},
       significantIndex: {},
+      isManager: false,
     }
   },
   async mounted() {
     this.loadHomePageData();
+    this.checkUserRole();
   },
   computed: {
     // 计算当前页显示的股票
@@ -136,6 +138,11 @@ export default {
     }
   },
   methods: {
+    checkUserRole() {
+      const currentPath = this.$route.path;
+      const managerID = localStorage.getItem('managerID');
+      this.isManager = currentPath.startsWith('/manager') || (managerID != null);
+    },
     async loadHomePageData() {
       try {
         const response = await this.$axios.get('/platform/loadHomePageData');

@@ -96,7 +96,9 @@ export default {
 
             // 跳转到用户界面，并保留userID
             const userID = response.data.user.user_id;
+            const userName = response.data.user.user_name;
             localStorage.setItem('userID', userID);
+            localStorage.setItem('userName', userName);
             this.$router.push('/user')
           } else if (response.data.status === 'ERROR') {
             alert("错误信息为:" + response.data.errorMessage);

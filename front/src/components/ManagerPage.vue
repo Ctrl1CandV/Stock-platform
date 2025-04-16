@@ -1,288 +1,184 @@
 <template>
-  <div class="admin-page">
-    <!-- 搜索区域 -->
-    <div class="search-section">
-      <input
-          v-model="searchKeyword"
-          type="text"
-          placeholder="输入用户名搜索"
-      />
-      <button @click="searchUsers">搜索</button>
-    </div>
-
-    <!-- 用户信息展示区域 -->
-    <div class="user-list">
-      <div
-          v-for="user in filteredUsers"
-          :key="user.userID"
-          class="user-item"
+  <el-container style="height: 100vh;">
+    <!-- 左侧功能栏 -->
+    <el-aside width="200px" style="background-color: #304156;">
+      <el-menu
+          :default-active="activeMenu"
+          class="el-menu-vertical-demo"
+          background-color="#304156"
+          text-color="#bfcbd9"
+          active-text-color="#409EFF"
       >
-        <div class="user-info">
-          <p>用户ID: {{ user.userID }}</p>
-          <p>用户名: {{ user.userName }}</p>
-          <p>邮箱: {{ user.userEmail }}</p>
-          <p>余额:
-            <input
-                v-model.number="user.userBalance"
-                type="number"
-                :disabled="user.status === false"
-                placeholder="输入新余额"
-            />
-            <button
-                :disabled="user.status === false"
-                @click="updateBalance(user.userID, user.userBalance)"
-            >修改余额</button>
-          </p>
-          <p>
-            账号状态: {{ user.status ? '启用' : '禁用' }}
-            <button
-                :disabled="user.status === false"
-                @click="deleteUser(user.userID)"
-            >删除用户</button>
-          </p>
+        <el-menu-item index="1" @click="goToHomePage">
+          <i class="el-icon-menu"></i>
+          <span slot="title">股票查询</span>
+        </el-menu-item>
+        <el-menu-item index="2" @click="goToUserManagement">
+          <i class="el-icon-user"></i>
+          <span slot="title">用户管理</span>
+        </el-menu-item>
+      </el-menu>
+    </el-aside>
+
+    <el-container>
+      <!-- 顶部导航栏 -->
+      <el-header style="text-align: right; font-size: 12px; border-bottom: 1px solid #e6e6e6;">
+        <div class="brand-area">
+          <div class="logo"></div>
+          <span class="brand-text">管理员控制台</span>
         </div>
-      </div>
-    </div>
-  </div>
+        <el-dropdown>
+          <i class="el-icon-user" style="margin-right: 15px; cursor: pointer;"></i>
+          <el-dropdown-menu slot="dropdown">
+            <el-dropdown-item @click.native="handleLogout">退出登录</el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
+      </el-header>
+
+      <!-- 主内容区域 -->
+      <el-main>
+        <component :is="currentComponent"></component>
+      </el-main>
+    </el-container>
+  </el-container>
 </template>
 
 <script>
+import HomePage from './HomePage.vue';
+import UserManagement from './UserManagement.vue';
+
 export default {
-  name: 'AdminPage',
+  name: 'ManagerPage',
+  components: {
+    HomePage,
+    UserManagement
+  },
   data() {
     return {
-      searchKeyword: '', // 搜索关键词
-      userList: [], // 存储所有用户数据
-      filteredUsers: [], // 根据搜索条件过滤后的用户数据
+      activeMenu: '1',
+      currentComponent: 'HomePage'
     };
   },
-  async mounted() {
-    await this.fetchUserData();
-  },
   methods: {
-    // 获取用户数据
-    async fetchUserData() {
-      try {
-        const response = await this.$axios.get('/manager/queryUsers');
-        if (response.data.status === 'SUCCESS') {
-          this.userList = response.data.userList;
-          this.filteredUsers = this.userList; // 初始显示全部数据
-        } else {
-          alert('获取用户数据失败: ' + response.data.errorMessage);
-        }
-      } catch (error) {
-        alert('请求失败: ' + error.message);
-      }
+    handleLogout() {
+      localStorage.removeItem('managerID');
+      this.$router.push('/login');
     },
-
-    // 根据用户名搜索用户
-    searchUsers() {
-      if (!this.searchKeyword) {
-        this.filteredUsers = this.userList;
-        return;
-      }
-
-      this.filteredUsers = this.userList.filter((user) =>
-          user.userName.includes(this.searchKeyword)
-      );
+    goToHomePage() {
+      this.currentComponent = 'HomePage';
+      this.activeMenu = '1';
     },
-
-    // 修改用户余额
-    async updateBalance(userID, newBalance) {
-      try {
-        const response = await this.$axios.post('/manager/editUserBalance', {
-          userID: userID,
-          newBalance: newBalance,
-        });
-
-        if (response.data.status === 'SUCCESS') {
-          alert('余额修改成功');
-        } else {
-          alert('余额修改失败: ' + response.data.errorMessage);
-        }
-      } catch (error) {
-        alert('请求失败: ' + error.message);
-      }
-    },
-
-    // 删除用户
-    async deleteUser(userID) {
-      if (confirm('确定要删除此用户吗？')) {
-        try {
-          const response = await this.$axios.post('/manager/deleteUser', { userID });
-          if (response.data.status === 'SUCCESS') {
-            alert('删除成功');
-            this.fetchUserData(); // 刷新用户列表
-          } else {
-            alert('删除失败: ' + response.data.errorMessage);
-          }
-        } catch (error) {
-          alert('请求失败: ' + error.message);
-        }
-      }
-    },
-  },
+    goToUserManagement() {
+      this.currentComponent = 'UserManagement';
+      this.activeMenu = '2';
+    }
+  }
 };
 </script>
 
 <style scoped>
-.admin-page {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-family: 'Segoe UI', system-ui, sans-serif;
+.el-container {
+  font-family: 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
 
-.search-section {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+.el-aside {
+  background: linear-gradient(135deg, #304156 0%, #2b3947 100%) !important;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
-.search-section input {
-  flex: 1;
-  padding: 0.8rem 1.2rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.3s ease;
+.el-menu {
+  border-right: none !important;
 }
 
-.search-section input:focus {
-  outline: none;
-  border-color: #4a90e2;
+/* 菜单项悬停/激活效果 */
+.el-menu-item {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  margin: 40px 8px !important;
+  border-radius: 6px !important;
 }
 
-.search-section button {
-  padding: 0.8rem 1.5rem;
-  background: #4a90e2;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.3s ease;
+.el-menu-item:hover {
+  background-color: rgba(64, 158, 255, 0.08) !important;
+  transform: translateX(4px);
 }
 
-.search-section button:hover {
-  background: #357abd;
+.el-menu-item.is-active {
+  background-color: rgba(64, 158, 255, 0.15) !important;
+  font-weight: 500;
 }
 
-.user-list {
-  display: grid;
-  gap: 1.5rem;
+.el-menu-item i {
+  color: #a8b5c5;
+  transition: color 0.3s;
 }
 
-.user-item {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
+.el-menu-item.is-active i {
+  color: #409EFF;
+}
+
+.el-header {
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(6px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 30px !important;
 }
 
-.user-item:hover {
-  transform: translateY(-2px);
+/* 用户图标样式 */
+.el-icon-user {
+  padding: 8px;
+  border-radius: 50%;
+  background: rgba(64, 158, 255, 0.1);
+  color: #409EFF !important;
+  transition: all 0.3s;
 }
 
-.user-info p {
-  margin: 0.8rem 0;
+.el-icon-user:hover {
+  background: rgba(64, 158, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.el-main {
+  background: #f8fafc !important;
+  padding: 24px !important;
+}
+
+.brand-area {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 12px;
 }
 
-.user-info input[type="number"] {
-  padding: 0.6rem;
-  border: 2px solid #e0e0e0;
+.logo {
+  width: 32px;
+  height: 32px;
+  background: #409EFF;
   border-radius: 6px;
-  width: 120px;
-  transition: border-color 0.3s ease;
 }
 
-.user-info input[type="number"]:focus {
-  border-color: #4a90e2;
-  outline: none;
+.brand-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
 }
 
-button {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s ease;
+.el-dropdown-menu {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  padding: 6px 0 !important;
 }
 
-button:disabled {
-  background: #f0f0f0 !important;
-  color: #a0a0a0 !important;
-  cursor: not-allowed;
+.el-dropdown-menu__item {
+  padding: 10px 16px !important;
+  transition: all 0.2s !important;
 }
 
-button[disabled] {
-  opacity: 0.6;
-}
-
-/* 不同操作按钮颜色 */
-button {
-  margin-left: 0.5rem;
-}
-
-button:not([disabled]):hover {
-  transform: translateY(-1px);
-}
-
-/* 修改余额按钮 */
-button:nth-of-type(1) {
-  background: #00c853;
-  color: white;
-}
-
-/* 删除用户按钮 */
-button:nth-of-type(2) {
-  background: #ff5252;
-  color: white;
-}
-
-/* 状态标签样式 */
-.user-info p:last-child {
-  padding-top: 1rem;
-  border-top: 1px solid #eee;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .user-info p {
-    flex-wrap: wrap;
-  }
-
-  .user-info input {
-    width: 100%;
-  }
-
-  button {
-    width: 100%;
-    margin-top: 0.5rem;
-  }
-}
-
-/* 斑马条纹效果 */
-.user-item:nth-child(odd) {
-  background: #f8f9ff;
-}
-
-/* 数字输入框箭头样式 */
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type=number] {
-  -moz-appearance: textfield;
+.el-dropdown-menu__item:hover {
+  background: #f5f7fa !important;
+  color: #409EFF !important;
+  transform: translateX(2px);
 }
 </style>

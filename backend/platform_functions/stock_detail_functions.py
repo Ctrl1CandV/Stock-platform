@@ -1,9 +1,9 @@
 from dateutil.relativedelta import relativedelta
+from .tushare_client import ts, pro
 from django.utils import timezone
 import matplotlib.pyplot as plt
 import mplfinance as mpf
 import pandas_ta as ta
-import tushare as ts
 import pandas as pd
 import datetime
 import base64
@@ -13,10 +13,6 @@ import matplotlib
 matplotlib.use('Agg')
 import warnings
 warnings.filterwarnings("ignore")
-
-# 初始化参数
-token = '66e72ae286def4e5826d1edc84f45cdad596c34137a91396b335cefd'
-pro = ts.pro_api(token)
 
 def draw_market_chart(data, title):
     # 数据的处理和格式转化

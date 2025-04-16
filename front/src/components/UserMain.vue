@@ -33,7 +33,7 @@
       <el-header style="text-align: right; font-size: 12px; border-bottom: 1px solid #e6e6e6;">
         <div class="brand-area">
           <div class="logo"></div>
-          <span class="brand-text">Admin Pro</span>
+          <span class="brand-text">{{ userName }}</span>
         </div>
         <el-dropdown>
           <i class="el-icon-user" style="margin-right: 15px; cursor: pointer;"></i>
@@ -58,6 +58,7 @@ export default {
   data() {
     return {
       userID: localStorage.getItem('userID'),
+      userName: localStorage.getItem('userName'),
       activeMenu: '1',
     };
   },

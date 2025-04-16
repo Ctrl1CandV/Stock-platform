@@ -6,7 +6,7 @@ import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
 
 // 设置Axios全局默认配置
-axios.defaults.baseURL = "http://localhost:8000";
+axios.defaults.baseURL = "http://192.168.1.82:8000";
 axios.defaults.headers['Content-Type'] = 'application/json';
 Vue.prototype.$axios = axios;
 Vue.config.productionTip = false

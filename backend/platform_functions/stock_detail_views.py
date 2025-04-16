@@ -2,6 +2,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from . import stock_detail_functions
+from .tushare_client import ts, pro
 from django.db import transaction
 from django.utils import timezone
 from .models import stock_market

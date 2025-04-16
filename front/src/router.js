@@ -9,6 +9,7 @@ import TransactionSearch from "@/components/TransactionSearch.vue";
 import ManagerPage from "@/components/ManagerPage.vue";
 import StockDetail from "@/components/StockDetail.vue";
 import WatchlistedPage from "@/components/WatchlistedPage.vue";
+import UserManagement from "@/components/UserManagement.vue";
 
 Vue.use(Router);
 
@@ -37,6 +38,11 @@ export default new Router({
             path: '/manager',
             name: 'Manager',
             component: ManagerPage,
+            children: [
+                { path: '', component: UserManagement },
+                { path: 'search', component: HomePage },
+                { path:'stock', component: StockDetail },
+            ]
         },
         {
             path: '*',

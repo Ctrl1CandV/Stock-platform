@@ -166,130 +166,255 @@ export default {
 </script>
 
 <style scoped>
+/* 基础样式 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Microsoft YaHei', Arial, sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+  line-height: 1.6;
+}
+
 .user-profile {
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 0 1rem;
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 0 20px;
 }
 
 .title {
   text-align: center;
-  color: #2c3e50;
-  margin-bottom: 2rem;
-  font-size: 2rem;
+  color: #333;
+  margin-bottom: 30px;
+  font-size: 28px;
   font-weight: 600;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.title:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(to right, #409eff, #67c23a);
+  border-radius: 3px;
 }
 
 .profile-container {
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 30px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .user-info,
 .password-section,
 .other-info-section {
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  border: 1px solid #eee;
-  border-radius: 8px;
+  margin-bottom: 30px;
+  padding: 25px;
+  border: 1px solid #eaeaea;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.user-info:hover,
+.password-section:hover,
+.other-info-section:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
 h2 {
-  color: #34495e;
-  font-size: 1.3rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid #f0f0f0;
+  color: #333;
+  font-size: 20px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #eee;
+  position: relative;
+}
+
+h2:after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background-color: #409eff;
 }
 
 .info-item {
   display: flex;
   align-items: center;
-  margin-bottom: 1rem;
-  font-size: 1rem;
+  margin-bottom: 18px;
+  font-size: 16px;
 }
 
 .info-item strong {
   width: 120px;
-  color: #666;
+  color: #606266;
+  font-weight: 600;
+}
+
+.info-item span {
+  color: #333;
+  font-weight: 500;
 }
 
 .input-field {
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 1rem;
-  transition: border-color 0.3s ease;
+  padding: 12px 15px;
+  border: 1px solid #dcdfe6;
+  border-radius: 8px;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
 }
 
 .input-field:focus {
-  border-color: #3498db;
+  border-color: #409eff;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.1);
 }
 
 .balance-input {
   width: 200px;
-  margin-right: 1rem;
+  margin-right: 15px;
+  font-weight: 600;
+  color: #409eff;
 }
 
 .form-row {
   display: grid;
-  grid-template-columns: 100px 1fr;
+  grid-template-columns: 120px 1fr;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.2rem;
+  gap: 15px;
+  margin-bottom: 20px;
 }
 
 .form-row label {
-  color: #666;
+  color: #606266;
   text-align: right;
+  font-weight: 600;
+}
+
+.form-row textarea {
+  min-height: 100px;
+  resize: vertical;
 }
 
 .btn {
-  padding: 0.75rem 1.5rem;
+  padding: 12px 24px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.3s;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
 .primary-btn {
-  background-color: #3498db;
+  background-color: #409eff;
   color: white;
+  box-shadow: 0 3px 8px rgba(64, 158, 255, 0.3);
 }
 
 .primary-btn:hover {
-  background-color: #2980b9;
+  background-color: #66b1ff;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(64, 158, 255, 0.4);
+}
+
+.primary-btn:active {
+  transform: translateY(0);
 }
 
 .success-btn {
-  background-color: #27ae60;
+  background-color: #67c23a;
   color: white;
+  box-shadow: 0 3px 8px rgba(103, 194, 58, 0.3);
+  width: 100%;
+  margin-top: 10px;
 }
 
 .success-btn:hover {
-  background-color: #219a52;
+  background-color: #85ce61;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(103, 194, 58, 0.4);
+}
+
+.success-btn:active {
+  transform: translateY(0);
 }
 
 .loading {
   text-align: center;
-  color: #7f8c8d;
-  font-size: 1.2rem;
+  color: #909399;
+  font-size: 18px;
+  padding: 50px 0;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  position: relative;
+}
+
+.loading:before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #409eff;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .password-section {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 15px;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .user-profile {
+    padding: 0 15px;
+  }
+  
+  .profile-container {
+    padding: 20px;
+  }
+  
   .form-row {
     grid-template-columns: 1fr;
     text-align: left;
@@ -297,18 +422,30 @@ h2 {
 
   .form-row label {
     text-align: left;
+    margin-bottom: 5px;
   }
 
   .info-item {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: 8px;
+  }
+
+  .info-item strong {
+    width: 100%;
+    margin-bottom: 5px;
   }
 
   .balance-input {
     width: 100%;
     margin-right: 0;
-    margin-bottom: 1rem;
+    margin-bottom: 15px;
+  }
+  
+  .user-info,
+  .password-section,
+  .other-info-section {
+    padding: 20px 15px;
   }
 }
 </style>

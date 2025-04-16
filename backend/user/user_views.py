@@ -1,18 +1,14 @@
 from .models import user_accounts, stock_ownership, stock_transactions, user_favorite_stocks, stock_basic
 from email_validator import validate_email, EmailNotValidError
 from django.views.decorators.http import require_http_methods
+from platform_functions.tushare_client import ts, pro
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
 from django.forms.models import model_to_dict
 from django.http import JsonResponse
 from django.db import transaction
 from django.utils import timezone
-import tushare as ts
 import re, json
-
-token = '66e72ae286def4e5826d1edc84f45cdad596c34137a91396b335cefd'
-ts.set_token(token)
-pro = ts.pro_api(token)
 
 '''
 用户模块功能：
