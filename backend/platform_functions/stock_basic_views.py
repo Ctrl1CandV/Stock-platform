@@ -6,10 +6,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.forms.models import model_to_dict
 from django.http import JsonResponse
 from django.core.cache import cache
+from .tushare_client import ts, pro
 from django.db import transaction
 from django.utils import timezone
 from datetime import time
-import tushare as ts
 import json
 import os
 
@@ -17,10 +17,6 @@ from dotenv import load_dotenv
 load_dotenv()
 import warnings
 warnings.filterwarnings("ignore")
-
-token = '66e72ae286def4e5826d1edc84f45cdad596c34137a91396b335cefd'
-ts.set_token(token)
-pro = ts.pro_api(token)
 
 '''
 证券查询页面主要包含，基于name或code的查询功能和股票的买入卖出功能

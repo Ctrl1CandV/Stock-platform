@@ -6,12 +6,8 @@ from .tushare_client import ts, pro
 from django.db import transaction
 from django.utils import timezone
 from .models import stock_market
-import tushare as ts
 import datetime
 import json
-
-token = '66e72ae286def4e5826d1edc84f45cdad596c34137a91396b335cefd'
-pro = ts.pro_api(token)
 
 '''
 股票详细页面的显示内容包含

@@ -51,9 +51,9 @@
     name: 'UserManagement',
     data() {
       return {
-        searchKeyword: '', // 搜索关键词
-        userList: [], // 存储所有用户数据
-        filteredUsers: [], // 根据搜索条件过滤后的用户数据
+        searchKeyword: '', 
+        userList: [], 
+        filteredUsers: [], 
       };
     },
     async mounted() {

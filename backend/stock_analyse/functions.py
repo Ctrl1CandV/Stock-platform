@@ -1,15 +1,12 @@
 from .transformer_forecasts import forecasts_functions
+from platform_functions.tushare_client import ts, pro
 import chinese_calendar as calendar
 from django.utils import timezone
 from bs4 import BeautifulSoup
-import tushare as ts
 import pandas as pd
 import numpy as np
 import datetime
 import requests
-
-token = '66e72ae286def4e5826d1edc84f45cdad596c34137a91396b335cefd'
-pro = ts.pro_api(token)
 
 # 寻找最近工作日
 def get_previous_workday():
