@@ -1,6 +1,8 @@
 # Web框架
 Django==5.1.4
 djangorestframework==0.1.0
+django-cors-headers==4.6.0
+django-redis==5.4.0
 
 # PyTorch CUDA版本 (使用额外索引源)
 --extra-index-url https://download.pytorch.org/whl/cu118
@@ -20,9 +22,6 @@ python-dotenv==1.0.1
 # 数据库连接
 mysqlclient==2.2.6
 pymysql==1.1.1
-
-# 跨域资源共享
-django-cors-headers==4.6.0
 
 # 图像处理
 matplotlib==3.10.0

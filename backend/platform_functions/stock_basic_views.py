@@ -447,7 +447,7 @@ def loadHomePageData(request):
         Shanghai_top10, Shenzhen_top10 = Shanghai_data.set_index('name')['amount'].to_dict(), Shenzhen_data.set_index('name')['amount'].to_dict()
 
         # 获取新闻信息
-        news_cache_key = f"stock_news_{timezone.now().strftime('%Y-%m-%d')}"
+        news_cache_key = f"stock_news_{timezone.now().strftime('%Y-%m-%d %H')}"
         try:
             news_data = pro.news(src='eastmoney', start_date=timezone.now().strftime('%Y-%m-%d') + ' 00:00:00', fields='datetime,content').head(10)
             news_information = news_data.set_index('datetime')['content'].to_dict()
