@@ -440,26 +440,47 @@ def loadHomePageData(request):
         news_information, significant_index = {}, {}
         trade_date = get_previous_workday()
 
-        # 获取前一日的十大成交股
-        Shanghai_data = pro.hsgt_top10(trade_date=trade_date, market_type='1')[['name', 'amount']].sort_values('amount', ascending=False)
-        Shenzhen_data = pro.hsgt_top10(trade_date=trade_date, market_type='3')[['name', 'amount']].sort_values('amount', ascending=False)
-        Shanghai_data['amount'], Shenzhen_data['amount'] = Shanghai_data['amount'].apply(lambda x: f'{x / 100000000:.2f}亿'), Shenzhen_data['amount'].apply(lambda x: f'{x / 100000000:.2f}亿')
-        Shanghai_top10, Shenzhen_top10 = Shanghai_data.set_index('name')['amount'].to_dict(), Shenzhen_data.set_index('name')['amount'].to_dict()
+        # --- 新增缓存key ---
+        sh_top10_cache_key = f"sh_top10_{trade_date}"
+        sz_top10_cache_key = f"sz_top10_{trade_date}"
+        index_cache_key = f"significant_index_{trade_date}"
+        news_cache_key = f"stock_news_{timezone.now().strftime('%Y-%m-%d %H')}"
+
+        # 上海十大成交股缓存
+        Shanghai_top10 = cache.get(sh_top10_cache_key)
+        if Shanghai_top10 is None:
+            Shanghai_data = pro.hsgt_top10(trade_date=trade_date, market_type='1')[['name', 'amount']].sort_values('amount', ascending=False)
+            Shanghai_data['amount'] = Shanghai_data['amount'].apply(lambda x: f'{x / 100000000:.2f}亿')
+            Shanghai_top10 = Shanghai_data.set_index('name')['amount'].to_dict()
+            cache.set(sh_top10_cache_key, Shanghai_top10, timeout=24 * 3600)
+
+        # 深圳十大成交股缓存
+        Shenzhen_top10 = cache.get(sz_top10_cache_key)
+        if Shenzhen_top10 is None:
+            Shenzhen_data = pro.hsgt_top10(trade_date=trade_date, market_type='3')[['name', 'amount']].sort_values('amount', ascending=False)
+            Shenzhen_data['amount'] = Shenzhen_data['amount'].apply(lambda x: f'{x / 100000000:.2f}亿')
+            Shenzhen_top10 = Shenzhen_data.set_index('name')['amount'].to_dict()
+            cache.set(sz_top10_cache_key, Shenzhen_top10, timeout=24 * 3600)
 
         # 获取新闻信息
-        news_cache_key = f"stock_news_{timezone.now().strftime('%Y-%m-%d %H')}"
-        try:
+        news_information = cache.get(news_cache_key)
+        if news_information is None:
             news_data = pro.news(src='eastmoney', start_date=timezone.now().strftime('%Y-%m-%d') + ' 00:00:00', fields='datetime,content').head(10)
             news_information = news_data.set_index('datetime')['content'].to_dict()
             cache.set(news_cache_key, news_information, timeout=24 * 3600)
-        except:
-            news_information = cache.get(news_cache_key)
 
         # 获取上证指数、深证成指、创业板指的最新行情
-        shanghai, SZSE, GEM = pro.index_daily(ts_code='000001.SH', trade_date=trade_date).iloc[0], pro.index_daily(ts_code='399001.SZ', trade_date=trade_date).iloc[0], pro.index_daily(ts_code='399006.SZ', trade_date=trade_date).iloc[0]
-        significant_index['上证指数'] = round((shanghai['close'] - shanghai['pre_close']) / shanghai['pre_close'] * 100, 4)
-        significant_index['深证成指'] = round((SZSE['close'] - SZSE['pre_close']) / SZSE['pre_close'] * 100, 4)
-        significant_index['创业板指'] = round((GEM['close'] - GEM['pre_close']) / GEM['pre_close'] * 100, 4)
+        significant_index = cache.get(index_cache_key)
+        if significant_index is None:
+            shanghai = pro.index_daily(ts_code='000001.SH', trade_date=trade_date).iloc[0]
+            SZSE = pro.index_daily(ts_code='399001.SZ', trade_date=trade_date).iloc[0]
+            GEM = pro.index_daily(ts_code='399006.SZ', trade_date=trade_date).iloc[0]
+            significant_index = {
+                '上证指数': round((shanghai['close'] - shanghai['pre_close']) / shanghai['pre_close'] * 100, 4),
+                '深证成指': round((SZSE['close'] - SZSE['pre_close']) / SZSE['pre_close'] * 100, 4),
+                '创业板指': round((GEM['close'] - GEM['pre_close']) / GEM['pre_close'] * 100, 4)
+            }
+            cache.set(index_cache_key, significant_index, timeout=24 * 3600)
 
         response['status'], response['ShanghaiTop10'], response['ShenzhenTop10'], response['newsInformation'], response['significantIndex'] = 'SUCCESS', Shanghai_top10, Shenzhen_top10, news_information, significant_index
     except json.JSONDecodeError:

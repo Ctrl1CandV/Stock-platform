@@ -17,10 +17,21 @@ class PositionalEncoding(nn.Module):
         x = x + self.pe[:x.size(1)]
         return self.dropout(x)
 
+class CustomEmbedding(nn.Module):
+    def __init__(self, input_dim, d_model, kernel_size=3):
+        super().__init__()
+        self.conv = nn.Conv1d(input_dim, d_model, kernel_size, padding=kernel_size//2)
+
+    def forward(self, x):
+        x = x.permute(0, 2, 1)
+        x = self.conv(x)
+        x = x.permute(0, 2, 1)
+        return x
+
 class Transformer(nn.Module):
     def __init__(self, input_dim=7, d_model=512, nhead=8, dim_feedforward=2048, num_layers=1):
         super().__init__()
-        self.embedding = nn.Linear(input_dim, d_model)
+        self.embedding = CustomEmbedding(input_dim, d_model, kernel_size=3)
         self.pos_encoder = PositionalEncoding(d_model)
         encoder_layer = nn.TransformerEncoderLayer(
             d_model, nhead, dim_feedforward, activation='gelu'
