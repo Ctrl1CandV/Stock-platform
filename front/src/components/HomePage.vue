@@ -52,7 +52,8 @@
       </div>
 
       <!-- 交易前十 -->
-      <div class="top-stocks-container">
+      <div class="top-stocks-container"
+        v-if="Object.keys(ShanghaiTop10).length > 0 && Object.keys(ShenzhenTop10).length > 0">
         <div class="top-stocks-section">
           <h3>沪市交易前十</h3>
           <div class="top-stocks-list">
