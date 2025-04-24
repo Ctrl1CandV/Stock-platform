@@ -192,6 +192,9 @@ def updateBalance(request):
         body = json.loads(request.body.decode('utf-8'))
         user_id = body.get('userID')
         new_balance = body.get('newBalance')
+        if new_balance <= 0:
+            response['errorMessage'] = "无效余额"
+            return JsonResponse(response)
 
         with transaction.atomic():
             user = user_accounts.objects.get(user_id=user_id)
@@ -227,18 +230,18 @@ def changePassword(request):
         old_password = body.get('oldPassword')
         new_password = body.get('newPassword')
 
-        with transaction.atomic():
-            user = user_accounts.objects.get(user_id=user_id)
-            if user.checkPassword(old_password):
+        if user.checkPassword(old_password):
+            with transaction.atomic():
+                user = user_accounts.objects.get(user_id=user_id)
                 validatePasswordComplexity(new_password)
                 user.setPassword(new_password)
                 user.save()
 
                 response['status'] = 'SUCCESS'
                 response['userID'] = user.user_id
-            else:
-                response['errorMessage'] = "旧密码错误"
-                return JsonResponse(response)
+        else:
+            response['errorMessage'] = "旧密码错误"
+            return JsonResponse(response)
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"

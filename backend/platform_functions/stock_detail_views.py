@@ -78,6 +78,9 @@ def showStockQurve(request):
         stock_code = request.GET.get('stockCode')
         time_span = int(request.GET.get('timeSpan'))
         type = int(request.GET.get('type'))
+        if time_span <= 0 or time_span >= 3000:
+            response['errorMessage'] = "无效的时间跨度"
+            return JsonResponse(response)
 
         # type用int表示，1对应日线，2对应周线，3对应月线
         image = stock_detail_functions.get_stock_chart(stock_code, time_span, type)

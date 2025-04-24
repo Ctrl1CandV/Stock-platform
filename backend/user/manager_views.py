@@ -94,6 +94,10 @@ def editUserBalance(request):
         new_balance = body.get('newBalance')
         response['userID'] = user_id
 
+        if new_balance <=0:
+            response['errorMessage'] = "无效余额"
+            return JsonResponse(response)
+            
         with transaction.atomic():
             user = user_accounts.objects.get(user_id=user_id)
             if user.status:

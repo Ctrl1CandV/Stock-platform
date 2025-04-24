@@ -96,7 +96,7 @@
 
     <!-- 预测分析区域 -->
     <div class="forecast-section">
-      <button @click="toggleForecast" v-if="!forecastVisible">点击预测分析</button>
+      <button @click="toggleForecast" v-if="!forecastVisible">进行预测分析</button>
       <div v-if="forecastVisible">
         <h2>预测分析内容</h2>
 

@@ -182,7 +182,9 @@ export default {
       try {
         const response = await this.$axios.post('/platform/updateAnnualDailyQuotes', { stockCode: stock.stockCode });
         if (response.data.status === 'SUCCESS') {
-          this.$router.push('/user/stock');
+          if (this.$route.path !== '/user/stock') {
+            this.$router.push('/user/stock');
+          }
           localStorage.setItem('stockCode', stock.stockCode);
           localStorage.setItem('stockName', stock.stockName);
         } else {
