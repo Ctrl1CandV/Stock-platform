@@ -472,13 +472,32 @@ def loadHomePageData(request):
         # 获取上证指数、深证成指、创业板指的最新行情
         significant_index = cache.get(index_cache_key)
         if significant_index is None:
-            shanghai = pro.index_daily(ts_code='000001.SH', trade_date=trade_date).iloc[0]
-            SZSE = pro.index_daily(ts_code='399001.SZ', trade_date=trade_date).iloc[0]
-            GEM = pro.index_daily(ts_code='399006.SZ', trade_date=trade_date).iloc[0]
+            shanghai = pro.index_daily(ts_code='000001.SH', trade_date=trade_date)
+            SZSE = pro.index_daily(ts_code='399001.SZ', trade_date=trade_date)
+            GEM = pro.index_daily(ts_code='399006.SZ', trade_date=trade_date)
+
+            if not shanghai.empty:
+                shanghai = sh_df.iloc[0]
+                sh_val = round((shanghai['close'] - shanghai['pre_close']) / shanghai['pre_close'] * 100, 4)
+            else:
+                sh_val = 0
+
+            if not SZSE.empty:
+                SZSE = sz_df.iloc[0]
+                sz_val = round((SZSE['close'] - SZSE['pre_close']) / SZSE['pre_close'] * 100, 4)
+            else:
+                sz_val = 0
+
+            if not GEM.empty:
+                GEM = gem_df.iloc[0]
+                gem_val = round((GEM['close'] - GEM['pre_close']) / GEM['pre_close'] * 100, 4)
+            else:
+                gem_val = 0
+
             significant_index = {
-                '上证指数': round((shanghai['close'] - shanghai['pre_close']) / shanghai['pre_close'] * 100, 4),
-                '深证成指': round((SZSE['close'] - SZSE['pre_close']) / SZSE['pre_close'] * 100, 4),
-                '创业板指': round((GEM['close'] - GEM['pre_close']) / GEM['pre_close'] * 100, 4)
+                '上证指数': sh_val,
+                '深证成指': sz_val,
+                '创业板指': gem_val
             }
             cache.set(index_cache_key, significant_index, timeout=24 * 3600)
 

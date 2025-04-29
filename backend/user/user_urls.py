@@ -13,4 +13,5 @@ urlpatterns = [
     path("ownershipPageLoad", user_views.ownershipPageLoad, name='ownership_page_load'),
     path("transactionPageLoad", user_views.transactionPageLoad, name='transaction_page_load'),
     path("getFavoriteStocksInformation", user_views.getFavoriteStocksInformation, name="get_favorite_stocks_information"),
+    path("dialogueLocalModel", user_views.dialogueLocalModel, name="dialogue_local_model")
 ]

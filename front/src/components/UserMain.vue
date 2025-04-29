@@ -2,13 +2,8 @@
   <el-container style="height: 100vh;">
     <!-- 左侧功能栏 -->
     <el-aside width="200px" style="background-color: #304156;">
-      <el-menu
-          :default-active="activeMenu"
-          class="el-menu-vertical-demo"
-          background-color="#304156"
-          text-color="#bfcbd9"
-          active-text-color="#409EFF"
-      >
+      <el-menu :default-active="activeMenu" class="el-menu-vertical-demo" background-color="#304156"
+        text-color="#bfcbd9" active-text-color="#409EFF">
         <el-menu-item index="1" @click="goToHomePage">
           <i class="el-icon-menu"></i>
           <span slot="title">股票查询</span>
@@ -24,6 +19,10 @@
         <el-menu-item index="4" @click="goToWatchlistedPage">
           <i class="el-icon-setting"></i>
           <span slot="title">自选股信息</span>
+        </el-menu-item>
+        <el-menu-item index="5" @click="goToModelDialogue">
+          <i class="el-icon-chat-dot-round"></i>
+          <span slot="title">模型对话</span>
         </el-menu-item>
       </el-menu>
     </el-aside>
@@ -71,29 +70,41 @@ export default {
       await this.$router.push('/user').catch(err => {
         if (err.name !== 'NavigationDuplicated') {
           throw err;
-        }});
+        }
+      });
       this.activeMenu = '1';
     },
     async goToOwnershipSearch() {
       await this.$router.push('/user/ownership').catch(err => {
         if (err.name !== 'NavigationDuplicated') {
           throw err;
-        }});
+        }
+      });
       this.activeMenu = '2';
     },
     async goToTransactionSearch() {
       await this.$router.push('/user/transaction').catch(err => {
         if (err.name !== 'NavigationDuplicated') {
           throw err;
-        }});
+        }
+      });
       this.activeMenu = '3';
     },
     async goToWatchlistedPage() {
       await this.$router.push('/user/watchlist').catch(err => {
-        if (err.name!== 'NavigationDuplicated') {
+        if (err.name !== 'NavigationDuplicated') {
           throw err;
-        }});
+        }
+      });
       this.activeMenu = '4';
+    },
+    async goToModelDialogue() {
+      await this.$router.push('/user/dialogue').catch(err => {
+        if (err.name !== 'NavigationDuplicated') {
+          throw err;
+        }
+      });
+      this.activeMenu = '5';
     },
   },
   watch: {
@@ -107,6 +118,8 @@ export default {
         this.activeMenu = '3';
       } else if (to.path === '/user/watchlist') {
         this.activeMenu = '4';
+      } else if (to.path === '/user/dialogue') {
+        this.activeMenu = '5';
       }
     }
   }

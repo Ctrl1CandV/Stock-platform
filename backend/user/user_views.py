@@ -1,14 +1,14 @@
 from .models import user_accounts, stock_ownership, stock_transactions, user_favorite_stocks, stock_basic
 from email_validator import validate_email, EmailNotValidError
 from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse, StreamingHttpResponse
 from platform_functions.tushare_client import ts, pro
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
 from django.forms.models import model_to_dict
-from django.http import JsonResponse
 from django.db import transaction
 from django.utils import timezone
-import re, json
+import re, json, requests
 
 '''
 用户模块功能：
@@ -454,3 +454,37 @@ def transactionPageLoad(request):
         return JsonResponse(response)
 
     return JsonResponse(response)
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def dialogueLocalModel(request):
+    ''' 使用本地部署AI,进行决策问答(流式返回给前端) '''
+
+    url = "http://192.168.1.67:1500/v1/chat/completions"
+    headers = {"Content-Type": "application/json"}
+    data = {"model": "deepseek-r1-distill-qwen-7b", "stream": True}
+    try:
+        body = json.loads(request.body.decode('utf-8'))
+        content = body.get('content')
+        data['messages'] = [{"role": "user", "content": content}]
+        
+        def stream_generator():
+            with requests.post(url, headers=headers, json=data, stream=True) as response:
+                response.encoding = 'utf-8'
+                for line in response.iter_lines(decode_unicode=True):
+                    if not line or not line.startswith('data: '):
+                        continue
+                    line = line[6:]
+                    if line.strip() == '[DONE]':
+                        break
+                    try:
+                        delta = json.loads(line)
+                        if "choices" in delta and len(delta["choices"]) > 0:
+                            content_piece = delta["choices"][0]["delta"].get("content", "")
+                            yield f"data: {content_piece}\n\n"
+                    except Exception as e:
+                        yield f"data: [解析错误] {str(e)}\n\n"
+        
+        return StreamingHttpResponse(stream_generator(), content_type='text/event-stream; charset=utf-8')
+    except Exception as e:
+        return JsonResponse({'status': 'ERROR', 'errorMessage': str(e)})

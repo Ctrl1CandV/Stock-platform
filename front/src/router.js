@@ -10,6 +10,7 @@ import ManagerPage from "@/components/ManagerPage.vue";
 import StockDetail from "@/components/StockDetail.vue";
 import WatchlistedPage from "@/components/WatchlistedPage.vue";
 import UserManagement from "@/components/UserManagement.vue";
+import ModelDialogue from "./components/ModelDialogue.vue";
 
 Vue.use(Router);
 
@@ -31,6 +32,7 @@ export default new Router({
                 { path: 'ownership', component: OwnershipSearch },
                 { path: 'transaction', component: TransactionSearch },
                 { path: 'watchlist', component: WatchlistedPage },
+                { path:'dialogue', component: ModelDialogue },
                 { path: 'stock', component: StockDetail },
             ]
         },
