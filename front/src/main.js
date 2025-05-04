@@ -5,8 +5,10 @@ import axios from "axios";
 import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
 
+const front_ip = process.env.VUE_APP_FRONT_IP;
+
 // 设置Axios全局默认配置
-axios.defaults.baseURL = "http://192.168.1.67:8000";
+axios.defaults.baseURL = `http://${front_ip}:8000`;
 axios.defaults.headers['Content-Type'] = 'application/json';
 Vue.prototype.$axios = axios;
 Vue.config.productionTip = false

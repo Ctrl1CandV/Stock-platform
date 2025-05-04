@@ -58,7 +58,8 @@ export default {
             this.loading = true;
 
             // 使用 Fetch 发送 POST 请求
-            const response = await fetch('http://192.168.1.67:8000/user/dialogueLocalModel', {
+            const front_ip = process.env.VUE_APP_FRONT_IP;
+            const response = await fetch(`http://${front_ip}:8000/user/dialogueLocalModel`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

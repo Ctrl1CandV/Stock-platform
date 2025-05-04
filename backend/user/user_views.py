@@ -8,7 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.forms.models import model_to_dict
 from django.db import transaction
 from django.utils import timezone
-import re, json, requests
+import os, re, json, requests
 
 '''
 用户模块功能：
@@ -460,7 +460,7 @@ def transactionPageLoad(request):
 def dialogueLocalModel(request):
     ''' 使用本地部署AI,进行决策问答(流式返回给前端) '''
 
-    url = "http://192.168.1.67:1500/v1/chat/completions"
+    url = f"http://{os.getenv('BACKEND_IP')}:1500/v1/chat/completions"
     headers = {"Content-Type": "application/json"}
     data = {"model": "deepseek-r1-distill-qwen-7b", "stream": True}
     try:

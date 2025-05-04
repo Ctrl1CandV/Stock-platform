@@ -168,7 +168,11 @@ def queryStockByCode(request):
     }
     try:
         search_code = request.GET.get('stockCode')
-        stock = stock_basic.objects.get(stock_code=search_code)
+        if search_code[-1].isalpha() and '.' in search_code:
+            stock = stock_basic.objects.get(stock_code=search_code)
+        else:
+            stock = stock_basic.objects.get(stock_code__startswith=search_code)
+
         stock_information = {
                 'stockCode': stock.stock_code,
                 'stockName': stock.stock_name,
@@ -477,19 +481,19 @@ def loadHomePageData(request):
             GEM = pro.index_daily(ts_code='399006.SZ', trade_date=trade_date)
 
             if not shanghai.empty:
-                shanghai = sh_df.iloc[0]
+                shanghai = shanghai.iloc[0]
                 sh_val = round((shanghai['close'] - shanghai['pre_close']) / shanghai['pre_close'] * 100, 4)
             else:
                 sh_val = 0
 
             if not SZSE.empty:
-                SZSE = sz_df.iloc[0]
+                SZSE = SZSE.iloc[0]
                 sz_val = round((SZSE['close'] - SZSE['pre_close']) / SZSE['pre_close'] * 100, 4)
             else:
                 sz_val = 0
 
             if not GEM.empty:
-                GEM = gem_df.iloc[0]
+                GEM = GEM.iloc[0]
                 gem_val = round((GEM['close'] - GEM['pre_close']) / GEM['pre_close'] * 100, 4)
             else:
                 gem_val = 0
