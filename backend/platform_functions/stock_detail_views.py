@@ -3,9 +3,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from . import stock_detail_functions
 from .tushare_client import ts, pro
+from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
 from .models import stock_market
+import pandas as pd
 import datetime
 import json
 
@@ -82,9 +84,16 @@ def showStockQurve(request):
             response['errorMessage'] = "无效的时间跨度"
             return JsonResponse(response)
 
-        # type用int表示，1对应日线，2对应周线，3对应月线
-        image = stock_detail_functions.get_stock_chart(stock_code, time_span, type)
-        response['status'], response['image'] = 'SUCCESS', image
+        cache_key = f'{stock_code}_{time_span}_{type}_stockQurve'
+        cache_result = cache.get(cache_key)
+        if cache_result:
+            response['image'] = cache_result
+        else:
+            # type用int表示，1对应日线，2对应周线，3对应月线
+            image = stock_detail_functions.get_stock_chart(stock_code, time_span, type)
+            response['image'] = image
+            cache.set(cache_key, image, 60 * 60 * 24)
+        response['status'] = 'SUCCESS'
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
@@ -107,8 +116,28 @@ def showTechnicalIndicator(request):
     }
     try:
         stock_code = request.GET.get('stockCode')
-        charts = stock_detail_functions.technical_indicator_charts(stock_code)
-        response['status'], response['indicatorCharts'] = 'SUCCESS', charts
+
+        cache_key = f'{stock_code}_technical_indicator_charts'
+        cache_result = cache.get(cache_key)
+        if cache_result:
+            response['indicatorCharts'] = cache_result
+        else:
+            stock_markets = stock_market.objects.filter(stock_code=stock_code).order_by('trade_date')
+            if stock_markets.exists():
+                data = pd.DataFrame(list(stock_markets.values('trade_date', 'high', 'low', 'close')))
+                data.rename(columns={
+                    'trade_date': 'trade_date',
+                    'high': 'high',
+                    'low': 'low',
+                    'close': 'close'
+                }, inplace=True)
+                charts = stock_detail_functions.technical_indicator_charts(stock_code, data)
+            else:
+                charts = stock_detail_functions.technical_indicator_charts(stock_code)
+            response['indicatorCharts'] = charts
+            cache.set(cache_key, charts, 60 * 60 * 24)
+        response['status'] = 'SUCCESS'
+        
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
@@ -155,8 +184,16 @@ def showValuationRatio(request):
     }
     try:
         stock_code = request.GET.get('stockCode')
-        image = stock_detail_functions.valuation_ratio_charts(stock_code)
-        response['status'], response['valuationRatioImage'] = 'SUCCESS', image
+
+        cache_key = f'{stock_code}_valuation_ratio_image'
+        cache_result = cache.get(cache_key)
+        if cache_result:
+            response['valuationRatioImage'] = cache_result
+        else:
+            image = stock_detail_functions.valuation_ratio_charts(stock_code)
+            response['valuationRatioImage'] = image
+            cache.set(cache_key, image, 60 * 60 * 24)
+        response['status'] = 'SUCCESS'
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"

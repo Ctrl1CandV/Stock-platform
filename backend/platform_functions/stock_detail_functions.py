@@ -110,13 +110,14 @@ def plot_technical_indicator(data, indicator_name, title, color='blue'):
 
     return image_base64
 
-def technical_indicator_charts(stock_code):
+def technical_indicator_charts(stock_code, data: pd.DataFrame = None):
     # 获取数据
-    end_date = timezone.now().date()
-    start_date = end_date - datetime.timedelta(days=400)
-    start_date, end_date = start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')
-    data = pro.daily(ts_code=stock_code, start_date=start_date, end_date=end_date)
-    data = data[['trade_date', 'high', 'low', 'close']]
+    if data is None:
+        end_date = timezone.now().date()
+        start_date = end_date - datetime.timedelta(days=400)
+        start_date, end_date = start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')
+        data = pro.daily(ts_code=stock_code, start_date=start_date, end_date=end_date)
+        data = data[['trade_date', 'high', 'low', 'close']]
 
     # 计算指标并展示图表
     indicators = calculate_technical_indicators(data)

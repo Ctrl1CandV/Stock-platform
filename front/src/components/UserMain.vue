@@ -5,7 +5,7 @@
       <el-menu :default-active="activeMenu" class="el-menu-vertical-demo" background-color="#304156"
         text-color="#bfcbd9" active-text-color="#409EFF">
         <el-menu-item index="1" @click="goToHomePage">
-          <i class="el-icon-menu"></i>
+          <i class="el-icon-search"></i>
           <span slot="title">股票查询</span>
         </el-menu-item>
         <el-menu-item index="2" @click="goToOwnershipSearch">
@@ -17,7 +17,7 @@
           <span slot="title">交易记录查询</span>
         </el-menu-item>
         <el-menu-item index="4" @click="goToWatchlistedPage">
-          <i class="el-icon-setting"></i>
+          <i class="el-icon-money"></i>
           <span slot="title">自选股信息</span>
         </el-menu-item>
         <el-menu-item index="5" @click="goToModelDialogue">

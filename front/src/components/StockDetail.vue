@@ -21,7 +21,11 @@
         <input type="text" v-model="timeSpan" id="time-span" placeholder="如：400" />
         <button @click="getStockQurve">获取</button>
       </div>
-      <img :src="klineImage" alt="K线图" />
+      <div v-if="loadingKline" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>K线图加载中...</p>
+      </div>
+      <img v-else :src="klineImage" alt="K线图" />
     </div>
 
     <!-- 技术指标 -->
@@ -38,13 +42,21 @@
           <option value="WRImage">WR</option>
         </select>
       </div>
-      <img :src="indicatorImages[indicatorType]" alt="技术指标图" />
+      <div v-if="loadingIndicator" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>技术指标加载中...</p>
+      </div>
+      <img v-else :src="indicatorImages[indicatorType]" alt="技术指标图" />
     </div>
 
     <!-- 公司财务指标 -->
     <div class="financial-section">
       <h2>公司财务指标</h2>
-      <table>
+      <div v-if="loadingFinancial" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>财务数据加载中...</p>
+      </div>
+      <table v-else>
         <thead>
           <tr>
             <th>公告日期</th>
@@ -91,7 +103,11 @@
     <!-- 股票估值比率变化图 -->
     <div class="valuation-section">
       <h2>股票估值比率变化图</h2>
-      <img :src="valuationImage" alt="估值比率变化图" />
+      <div v-if="loadingValuation" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>估值比率图加载中...</p>
+      </div>
+      <img v-else :src="valuationImage" alt="估值比率变化图" />
     </div>
 
     <!-- 预测分析区域 -->
@@ -209,28 +225,18 @@ export default {
   name: 'StockDetail',
   data() {
     return {
-      // 股票基本信息
       stockCode: localStorage.getItem('stockCode') || '',
       stockName: localStorage.getItem('stockName') || '',
       stockIntroduction: '',
-
-      // 图表数据
-      klineImage: '', // base64字符串，来自后端
+      klineImage: '',
       indicatorImages: {},
-      valuationImage: '', // base64字符串，来自后端
-
-      // 选择项
-      chartType: '1', // 默认日线
-      timeSpan: 400, // 默认400天
-      indicatorType: 'MACDImage', // 默认MACD
-
-      // 财务数据
+      valuationImage: '',
+      chartType: '1',
+      timeSpan: 500,
+      indicatorType: 'MACDImage',
       financialMetrics: [],
 
-      // 预测分析显示状态
       forecastVisible: false,
-
-      // 预测部分的数据
       nextClose: 0,
       gainRate: 0,
       zScore: 0,
@@ -673,11 +679,11 @@ img:hover {
 }
 
 .positive {
-  color: #4caf50;
+  color: #f44336;
 }
 
 .negative {
-  color: #f44336;
+  color: #4caf50;
 }
 
 .arrow {
