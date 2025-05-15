@@ -42,7 +42,7 @@ export default {
         return {
             messages: [],
             inputText: '',
-            thinking: '', // 新增：用于存储思考内容
+            thinking: '',
             loading: false,
         }
     },

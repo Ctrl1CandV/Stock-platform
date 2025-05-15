@@ -23,4 +23,5 @@ urlpatterns = [
     path("manager/", include("user.manager_urls")),
     path("user/", include("user.user_urls")),
     path("platform/", include("platform_functions.urls")),
+    path("dialogue/", include("dialogue.urls")),
 ]
