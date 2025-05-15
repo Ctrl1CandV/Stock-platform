@@ -208,7 +208,6 @@ export default {
           if (response.data.status === 'SUCCESS') {
             this.stockList = response.data.stockInformation;
             this.currentPage = 1;
-            alert('查询成功');
           } else if (response.data.status === 'ERROR') {
             alert("查询失败:" + response.data.errorMessage);
           }
@@ -219,7 +218,6 @@ export default {
           if (response.data.status === 'SUCCESS') {
             this.stockList = response.data.stockInformationList;
             this.currentPage = 1;
-            alert('查询成功');
           } else if (response.data.status === 'ERROR') {
             alert("查询失败:" + response.data.errorMessage);
           }
