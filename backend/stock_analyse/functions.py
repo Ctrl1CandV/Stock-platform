@@ -110,13 +110,7 @@ def calculate_sharpe_ratio(rate, data):
 
 if __name__ == '__main__':
     stock_code = '002558.SZ'
-    end_date = timezone.now().date()
-    start_date = end_date - datetime.timedelta(days=500)
-    start_date, end_date = start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')
-    data = pro.daily(ts_code=stock_code, start_date=start_date, end_date=end_date)
-
-    # 如果是ORM获取的data需要进行data = pd.DataFrame(list(data.values()))进行数据适应
-
-    # print(forecast_result(stock_code, data))
-    # rate = crawling_Riskfree_rate()
-    # print(calculate_sharpe_ratio(float(rate['10年']), data['pct_chg']))
+    # end_date = timezone.now().date()
+    # start_date = end_date - datetime.timedelta(days=500)
+    # start_date, end_date = start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')
+    # data = pro.daily(ts_code=stock_code, start_date=start_date, end_date=end_date)

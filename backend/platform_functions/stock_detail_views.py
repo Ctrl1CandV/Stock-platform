@@ -74,7 +74,8 @@ def showStockQurve(request):
     response = {
         'status': 'ERROR',
         'errorMessage': None,
-        'image': None,
+        'data': None,
+        'title': None
     }
     try:
         stock_code = request.GET.get('stockCode')
@@ -84,15 +85,17 @@ def showStockQurve(request):
             response['errorMessage'] = "无效的时间跨度"
             return JsonResponse(response)
 
-        cache_key = f'{stock_code}_{time_span}_{type}_stockQurve'
+        cache_key = f'{stock_code}_{time_span}_{type}_stockQurveData'
         cache_result = cache.get(cache_key)
         if cache_result:
-            response['image'] = cache_result
+            response['data'] = cache_result['data']
+            response['title'] = cache_result['title']
         else:
             # type用int表示，1对应日线，2对应周线，3对应月线
-            image = stock_detail_functions.get_stock_chart(stock_code, time_span, type)
-            response['image'] = image
-            cache.set(cache_key, image, 60 * 60 * 24)
+            data, title = stock_detail_functions.get_stock_data(stock_code, time_span, type)
+            response['data'] = data
+            response['title'] = title
+            cache.set(cache_key, {'data': data, 'title': title}, 60 * 60 * 24)
         response['status'] = 'SUCCESS'
 
     except json.JSONDecodeError:

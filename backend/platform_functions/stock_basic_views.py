@@ -444,7 +444,7 @@ def loadHomePageData(request):
         news_information, significant_index = {}, {}
         trade_date = get_previous_workday()
 
-        # --- 新增缓存key ---
+        # 新增缓存key
         sh_top10_cache_key = f"sh_top10_{trade_date}"
         sz_top10_cache_key = f"sz_top10_{trade_date}"
         index_cache_key = f"significant_index_{trade_date}"

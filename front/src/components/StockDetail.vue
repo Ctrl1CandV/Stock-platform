@@ -25,7 +25,9 @@
         <div class="loading-spinner"></div>
         <p>K线图加载中...</p>
       </div>
-      <img v-else :src="klineImage" alt="K线图" />
+      <div v-else class="chart-container">
+        <div id="kline-chart" style="width: 100%; height: 400px;"></div>
+      </div>
     </div>
 
     <!-- 技术指标 -->
@@ -221,6 +223,8 @@
 </template>
 
 <script>
+import * as echarts from 'echarts';
+
 export default {
   name: 'StockDetail',
   data() {
@@ -228,7 +232,9 @@ export default {
       stockCode: localStorage.getItem('stockCode') || '',
       stockName: localStorage.getItem('stockName') || '',
       stockIntroduction: '',
-      klineImage: '',
+      klineData: [],
+      klineTitle: '',
+      chart: null,
       indicatorImages: {},
       valuationImage: '',
       chartType: '1',
@@ -263,19 +269,256 @@ export default {
         alert(error.message);
       }
     },
+    drawKlineChart(data, title) {
+      const chartDom = document.getElementById('kline-chart');
+      if (!chartDom) return;
+
+      if (this.chart) {
+        this.chart.dispose();
+      }
+      this.chart = echarts.init(chartDom);
+      
+      // 处理日期，减少横坐标密集问题
+      const dates = data.map(item => item.trade_date);
+      const displayDates = [];
+      const step = Math.ceil(dates.length / 10);
+      
+      for (let i = 0; i < dates.length; i++) {
+        displayDates.push(i % step === 0 ? dates[i] : '');
+      }
+      
+      // 设置K线图和交易量图表选项
+      const option = {
+        backgroundColor: '#fff',
+        title: { 
+          text: title,
+          left: 'center',
+          textStyle: {
+            fontSize: 16
+          }
+        },
+        legend: {
+          data: ['K线', '5日均线', '10日均线', '20日均线'],
+          top: '30px'
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: { 
+            type: 'cross',
+            lineStyle: {
+              color: '#999',
+              width: 1,
+              type: 'dashed'
+            }
+          }
+        },
+        axisPointer: {
+          link: {xAxisIndex: 'all'}
+        },
+        grid: [{
+          left: '3%',
+          right: '3%',
+          top: '60px',
+          height: '60%'
+        }, {
+          left: '3%',
+          right: '3%',
+          top: '75%',
+          height: '15%'
+        }],
+        xAxis: [
+          {
+            type: 'category',
+            data: dates,
+            axisLabel: { 
+              rotate: 45,
+              formatter: function(value, index) {
+                return displayDates[index];
+              }
+            },
+            boundaryGap: false,
+            axisLine: {lineStyle: {color: '#8392A5'}},
+            splitLine: {show: false}
+          },
+          {
+            type: 'category',
+            gridIndex: 1,
+            data: dates,
+            axisLabel: {show: false},
+            axisLine: {lineStyle: {color: '#8392A5'}},
+            axisTick: {show: false},
+            splitLine: {show: false}
+          }
+        ],
+        yAxis: [
+          {
+            scale: true,
+            splitArea: {
+              show: true,
+              areaStyle: {
+                color: ['rgba(250,250,250,0.1)','rgba(240,240,240,0.1)']
+              }
+            },
+            axisLine: {lineStyle: {color: '#8392A5'}},
+            splitLine: {
+              show: true,
+              lineStyle: {
+                color: '#eee',
+                type: 'dashed'
+              }
+            }
+          },
+          {
+            scale: true,
+            gridIndex: 1,
+            splitNumber: 2,
+            axisLabel: {show: false},
+            axisLine: {show: false},
+            axisTick: {show: false},
+            splitLine: {show: false}
+          }
+        ],
+        dataZoom: [
+          {
+            type: 'inside',
+            xAxisIndex: [0, 1],
+            start: 0,
+            end: 100
+          }
+        ],
+        series: [
+          {
+            name: 'K线',
+            type: 'candlestick',
+            data: data.map(item => [item.open, item.close, item.low, item.high]),
+            itemStyle: {
+              color: '#ec0000',
+              color0: '#00da3c',
+              borderColor: '#ec0000',
+              borderColor0: '#00da3c'
+            },
+            markPoint: {
+              label: {
+                formatter: function (param) {
+                  return param != null ? Math.round(param.value) + '' : '';
+                }
+              },
+              data: [
+                {
+                  name: '最高值',
+                  type: 'max',
+                  valueDim: 'highest'
+                },
+                {
+                  name: '最低值',
+                  type: 'min',
+                  valueDim: 'lowest'
+                }
+              ],
+              tooltip: {
+                formatter: function (param) {
+                  return param.name + '<br>' + (param.data.coord || '');
+                }
+              }
+            }
+          },
+          {
+            name: '5日均线',
+            type: 'line',
+            data: calculateMA(5, data),
+            smooth: true,
+            lineStyle: {
+              opacity: 0.5
+            }
+          },
+          {
+            name: '10日均线',
+            type: 'line',
+            data: calculateMA(10, data),
+            smooth: true,
+            lineStyle: {
+              opacity: 0.5
+            }
+          },
+          {
+            name: '20日均线',
+            type: 'line',
+            data: calculateMA(20, data),
+            smooth: true,
+            lineStyle: {
+              opacity: 0.5
+            }
+          },
+          {
+            name: '成交量',
+            type: 'bar',
+            xAxisIndex: 1,
+            yAxisIndex: 1,
+            data: data.map(item => {
+              const color = item.open < item.close ? '#00da3c' : '#ec0000';
+              return {
+                value: item.vol,
+                itemStyle: {
+                  color: color
+                }
+              };
+            })
+          }
+        ]
+      };
+
+      this.chart.setOption(option);
+      
+      // 添加窗口大小变化时自动调整图表大小
+      window.addEventListener('resize', () => {
+        this.chart.resize();
+      });
+      
+      // 计算移动平均线函数
+      function calculateMA(dayCount, data) {
+        var result = [];
+        for (var i = 0, len = data.length; i < len; i++) {
+          if (i < dayCount - 1) {
+            result.push('-');
+            continue;
+          }
+          var sum = 0;
+          for (var j = 0; j < dayCount; j++) {
+            sum += +data[i - j].close;
+          }
+          result.push((sum / dayCount).toFixed(2));
+        }
+        return result;
+      }
+    },
+
     async getStockQurve() {
       try {
+        this.loadingKline = true;
         const response = await this.$axios.get('/platform/showStockQurve', {
-          params: { stockCode: this.stockCode, timeSpan: this.timeSpan, type: this.chartType }
+          params: {
+            stockCode: this.stockCode,
+            timeSpan: this.timeSpan,
+            type: this.chartType
+          }
         });
+
         if (response.data.status === 'SUCCESS') {
-          this.klineImage = 'data:image/png;base64,' + response.data.image;
-          console.log('K线图获取成功');
-        } else if (response.data.status === 'ERROR') {
-          alert('K线图获取失败:' + response.data.errorMessage);
+          this.klineData = response.data.data;
+          this.klineTitle = response.data.title;
+          console.log(this.klineData, this.klineTitle);
+          
+          await this.$nextTick();
+          setTimeout(() => {
+            this.drawKlineChart(this.klineData, this.klineTitle);
+          }, 100);
+        } else {
+          alert('K线图数据获取失败: ' + response.data.errorMessage);
         }
       } catch (error) {
         alert(error.message);
+      } finally {
+        this.loadingKline = false;
       }
     },
     async getTechnicalIndicator() {
@@ -313,7 +556,6 @@ export default {
         });
         if (response.data.status === 'SUCCESS') {
           this.valuationImage = 'data:image/png;base64,' + response.data.valuationRatioImage;
-          console.log('股票估值比率变化图获取成功');
         } else if (response.data.status === 'ERROR') {
           alert('股票估值比率变化图获取失败:' + response.data.errorMessage);
         }
@@ -400,7 +642,9 @@ export default {
 }
 
 /* 通用样式 */
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   color: #1a237e;
   margin: 1.2em 0 0.8em;
   font-weight: 600;
@@ -450,7 +694,8 @@ button:hover {
   box-shadow: 0 4px 8px rgba(63, 81, 181, 0.4);
 }
 
-select, input {
+select,
+input {
   padding: 8px 14px;
   border: 1px solid #ddd;
   border-radius: 6px;
@@ -460,7 +705,8 @@ select, input {
   font-size: 0.95rem;
 }
 
-select:focus, input:focus {
+select:focus,
+input:focus {
   border-color: #7986cb;
   outline: none;
   box-shadow: 0 0 0 3px rgba(121, 134, 203, 0.2);
@@ -523,7 +769,8 @@ table {
   overflow: hidden;
 }
 
-th, td {
+th,
+td {
   padding: 14px;
   text-align: right;
   border-bottom: 1px solid #eee;
@@ -567,6 +814,7 @@ img:hover {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -616,13 +864,13 @@ img:hover {
   border-radius: 10px;
   padding: 24px;
   margin: 20px 0;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   border-left: 4px solid #7986cb;
   transition: all 0.3s ease;
 }
 
 .forecast-item:hover {
-  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
   transform: translateY(-3px);
 }
 
@@ -658,7 +906,7 @@ img:hover {
   border-radius: 8px;
   padding: 20px;
   text-align: center;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.03);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
 }
 
 .prediction-value {
@@ -722,17 +970,19 @@ img:hover {
   margin-left: 5px;
 }
 
-.z-score-table, .bond-rate-table {
+.z-score-table,
+.bond-rate-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   margin: 15px 0;
 }
 
-.z-score-table th, .bond-rate-table th {
+.z-score-table th,
+.bond-rate-table th {
   background: linear-gradient(to bottom, #f0f2ff, #e3e6ff);
   color: #3f51b5;
   font-weight: 600;
@@ -740,21 +990,25 @@ img:hover {
   padding: 12px 15px;
 }
 
-.z-score-table td, .bond-rate-table td {
+.z-score-table td,
+.bond-rate-table td {
   padding: 12px 15px;
   border-bottom: 1px solid #eee;
   text-align: left;
 }
 
-.z-score-table tr:last-child td, .bond-rate-table tr:last-child td {
+.z-score-table tr:last-child td,
+.bond-rate-table tr:last-child td {
   border-bottom: none;
 }
 
-.z-score-table tr:nth-child(even), .bond-rate-table tr:nth-child(even) {
+.z-score-table tr:nth-child(even),
+.bond-rate-table tr:nth-child(even) {
   background-color: #f9faff;
 }
 
-.z-score-table tr:hover td, .bond-rate-table tr:hover td {
+.z-score-table tr:hover td,
+.bond-rate-table tr:hover td {
   background-color: #f0f2ff;
 }
 
@@ -822,7 +1076,9 @@ img:hover {
     align-items: stretch;
   }
 
-  button, select, input {
+  button,
+  select,
+  input {
     margin: 6px 0;
     width: 100%;
   }
@@ -838,16 +1094,16 @@ img:hover {
   .stock-header h1 {
     font-size: 1.6rem;
   }
-  
+
   .prediction-result {
     flex-direction: column;
   }
-  
+
   .sharpe-ratio-container {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .ratio-circle {
     margin: 0 auto 20px;
   }
