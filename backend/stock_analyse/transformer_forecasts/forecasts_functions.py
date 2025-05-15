@@ -37,9 +37,6 @@ class Normalizer():
 
 def transformerLoadDataset(data, batch_size, window_size=25):
     #  针对交易时间进行排序，并进行补充维度的添加
-    data['trade_date'] = pd.to_datetime(data['trade_date'])
-    data.set_index('trade_date', inplace=True)
-    data = data.sort_index(ascending=True)
     data.ta.macd(append=True)
     data.ta.rsi(append=True)
     data = data.dropna()

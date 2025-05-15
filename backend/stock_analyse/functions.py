@@ -20,10 +20,13 @@ def get_previous_workday():
 后期使用ORM获取数据库的数据进行训练和预测
 '''
 def forecast_result(stock_code, data):
+    # 对两种输入源按照交易日期进行排序
+    data['trade_date'] = pd.to_datetime(data['trade_date'])
+    data.set_index('trade_date', inplace=True)
+    data = data.sort_index(ascending=True)
     forecasts_data = forecasts_functions.train(stock_code, data)
     prediction = forecasts_functions.forecast(stock_code, forecasts_data)
-    result = prediction[0, 0]
-    pre_close = data['close'][0]
+    result, pre_close = prediction[0, 0], data['close'].iloc[-1]
     return (result - pre_close) / pre_close * 100, result
 
 def calculate_Zscore(stock_code):
