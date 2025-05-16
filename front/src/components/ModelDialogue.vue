@@ -13,16 +13,11 @@
                     <i class="el-icon-cpu"></i>
                 </div>
                 <div class="bubble" :class="msg.role === 'assistant' ? 'reply-bubble' : ''">
-                    <span>{{ msg.content }}</span>
-                </div>
-            </div>
-            <!-- 思考内容单独展示 -->
-            <div v-if="thinking" class="message assistant">
-                <div class="avatar">
-                    <i class="el-icon-cpu"></i>
-                </div>
-                <div class="bubble thinking-bubble">
-                    <span>思考中：{{ thinking }}</span>
+                    <div v-if="msg.thinking" class="thinking-content">
+                        <div class="thinking-label">思考过程：</div>
+                        <div class="thinking-text">{{ msg.thinking }}</div>
+                    </div>
+                    <div v-if="msg.content" class="response-content" v-html="renderMarkdown(msg.content)"></div>
                 </div>
             </div>
         </div>
@@ -36,81 +31,70 @@
 </template>
 
 <script>
+import MarkdownIt from 'markdown-it';
+import DOMPurify from 'dompurify';
+
 export default {
     name: "ModelDialogue",
     data() {
         return {
+            userID: localStorage.getItem('userID'),
             messages: [],
             inputText: '',
-            thinking: '',
             loading: false,
         }
     },
     methods: {
+        renderMarkdown(text) {
+            if (!text) return '';
+            const md = new MarkdownIt();
+            return DOMPurify.sanitize(md.render(text));
+        },
         async handleSend() {
             if (!this.inputText.trim()) return;
 
             // 添加用户消息
             this.messages.push({ role: 'user', content: this.inputText });
-
-            // 清空思考内容
-            this.thinking = '';
             this.loading = true;
 
-            // 使用 Fetch 发送 POST 请求
-            const front_ip = process.env.VUE_APP_FRONT_IP;
-            const response = await fetch(`http://${front_ip}:8000/user/dialogueLocalModel`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ content: this.inputText })
-            });
-
-            if (!response.ok) {
-                this.messages.push({ role: 'assistant', content: 'Error: ' + response.statusText });
-                this.loading = false;
-                return;
-            }
-
-            // 读取流式数据
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let done = false;
-            let buffer = '';
-            let reply = '';
-
-            while (!done) {
-                const { value, done: doneReading } = await reader.read();
-                done = doneReading;
-                if (value) {
-                    buffer += decoder.decode(value, { stream: true });
-                    let eventEnd = buffer.indexOf('\n\n');
-                    while (eventEnd !== -1) {
-                        const event = buffer.slice(0, eventEnd);
-                        buffer = buffer.slice(eventEnd + 2);
-                        if (event.startsWith('data: ')) {
-                            const data = event.slice(6).trim();
-                            if (data) {
-                                // 这里假设流式内容就是思考内容，最后一次为回复
-                                this.thinking += data;
-                                this.$nextTick(() => {
-                                    const content = this.$refs.dialogueContent;
-                                    content.scrollTop = content.scrollHeight;
-                                });
-                            }
-                        }
-                        eventEnd = buffer.indexOf('\n\n');
+            try {
+                // 使用 axios 发送 GET 请求
+                const response = await this.$axios.get(`/dialogue/dialogueLocalModel`, {
+                    params: {
+                        userID: this.userID,
+                        userContent: this.inputText
                     }
-                }
-            }
+                });
 
-            // 流式结束后，将思考内容作为最终回复，清空思考内容
-            reply = this.thinking;
-            this.thinking = '';
-            this.messages.push({ role: 'assistant', content: reply });
-            this.inputText = '';
-            this.loading = false;
+                if (response.data.status === 'SUCCESS') {
+                    // 同时添加思考内容和回复内容
+                    this.messages.push({
+                        role: 'assistant',
+                        thinking: response.data.thinking_content,
+                        content: response.data.response_content
+                    });
+
+                    this.inputText = '';
+
+                    // 滚动到底部
+                    this.$nextTick(() => {
+                        const content = this.$refs.dialogueContent;
+                        content.scrollTop = content.scrollHeight;
+                    });
+                } else {
+                    this.messages.push({
+                        role: 'assistant',
+                        content: 'Error: ' + response.data.errorMessage
+                    });
+                }
+            } catch (error) {
+                this.messages.push({
+                    role: 'assistant',
+                    content: 'Error: ' + (error.message || '请求失败')
+                });
+            } finally {
+                this.loading = false;
+            }
         }
     }
 }
@@ -335,5 +319,111 @@ export default {
 .send-btn:disabled {
     background: #e0e0e0;
     box-shadow: none;
+}
+
+.thinking-content {
+    background: linear-gradient(135deg, #fff8e1 60%, #fffde7 100%);
+    padding: 16px 20px;
+    margin-bottom: 14px;
+    border-radius: 12px;
+    border-left: 4px dashed #ffc107;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.08);
+    position: relative;
+    transition: box-shadow 0.3s;
+}
+
+.thinking-content::before {
+    content: "💡";
+    position: absolute;
+    left: -32px;
+    top: 16px;
+    font-size: 22px;
+    color: #ffc107;
+}
+
+.thinking-label {
+    font-weight: bold;
+    color: #b28704;
+    margin-bottom: 8px;
+    font-size: 16px;
+    letter-spacing: 1px;
+}
+
+.thinking-text {
+    font-style: italic;
+    color: #795548;
+    white-space: pre-wrap;
+    font-size: 15px;
+    line-height: 1.8;
+}
+
+.response-content {
+    background: linear-gradient(135deg, #f0f7ff 60%, #e3f2fd 100%);
+    color: #333;
+    padding: 16px 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(58, 142, 230, 0.08);
+    border-left: 4px solid #3a8ee6;
+    margin-bottom: 8px;
+    font-size: 15px;
+    line-height: 1.8;
+    position: relative;
+    transition: box-shadow 0.3s;
+}
+
+.response-content::before {
+    content: "🤖";
+    position: absolute;
+    left: -32px;
+    top: 16px;
+    font-size: 22px;
+    color: #3a8ee6;
+}
+
+.response-content :deep(pre) {
+    background: #e3f2fd;
+    padding: 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 8px 0;
+}
+
+.response-content :deep(code) {
+    background: #e1f5fe;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    color: #1976d2;
+}
+
+.response-content :deep(blockquote) {
+    border-left: 4px solid #90caf9;
+    padding-left: 14px;
+    color: #1976d2;
+    margin: 12px 0;
+    background: #f1f8ff;
+    border-radius: 6px;
+}
+
+.response-content :deep(ul),
+.response-content :deep(ol) {
+    padding-left: 24px;
+}
+
+.response-content :deep(table) {
+    border-collapse: collapse;
+    width: 100%;
+    background: #f8fafd;
+}
+
+.response-content :deep(th),
+.response-content :deep(td) {
+    border: 1px solid #b3e5fc;
+    padding: 8px;
+}
+
+.response-content :deep(th) {
+    background-color: #b3e5fc;
+    color: #1565c0;
 }
 </style>

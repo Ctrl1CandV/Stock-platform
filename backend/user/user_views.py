@@ -191,7 +191,7 @@ def updateBalance(request):
     try:
         body = json.loads(request.body.decode('utf-8'))
         user_id = body.get('userID')
-        new_balance = body.get('newBalance')
+        new_balance = float(body.get('newBalance'))
         if new_balance <= 0:
             response['errorMessage'] = "无效余额"
             return JsonResponse(response)
@@ -345,7 +345,7 @@ def getFavoriteStocksInformation(request):
         favorite_stocks = user_favorite_stocks.objects.filter(user_id=user_id)
 
         if favorite_stocks.exists() == False:
-            response['errorMessage'] = "用户没有添加自选股"
+            response['status'], response['favoriteStocksList'] = "SUCCESS", []
             return JsonResponse(response)
 
         favorite_stocks_list, query_stock_codes = [], ''

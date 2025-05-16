@@ -16,9 +16,8 @@ def dialogueLocalModel(request):
         'thinking_content': None 
     }
     try:
-        user_id = request.GET.get('userID')
+        user_id = int(request.GET.get('userID'))
         user_content = request.GET.get('userContent')
-        print(user_id, user_content)
         agent = Agent(user_id)
         response_content, thinking_content = agent.send_message(user_content)
         agent.close()

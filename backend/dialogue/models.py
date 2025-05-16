@@ -95,8 +95,6 @@ class Agent():
         user_memory = cache.get(self.memory_key)
         if not user_memory:
             return []
-        if not isinstance(user_memory, List[Dict[str, str]]):
-            raise ValueError("Memory is not a list of dict")
         memory = [Prompt(**prompt) for prompt in user_memory]
         return memory
 
@@ -122,6 +120,6 @@ class Agent():
             prompt.to_message()
             for prompt in self.client.memorys
         ]
-        cache.set(self.memory_key, messages)
+        cache.set(self.memory_key, messages, 60 * 60)
         self.client.clear()
         del self.client

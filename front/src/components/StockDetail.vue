@@ -508,14 +508,23 @@ export default {
           this.klineTitle = response.data.title;
           console.log(this.klineData, this.klineTitle);
           
+          // 确保DOM已经更新
           await this.$nextTick();
+          // 使用更长的延迟确保DOM完全渲染
           setTimeout(() => {
-            this.drawKlineChart(this.klineData, this.klineTitle);
-          }, 100);
+            if (this.klineData && this.klineData.length > 0) {
+              try {
+                this.drawKlineChart(this.klineData, this.klineTitle);
+              } catch (err) {
+                console.error('绘制K线图失败:', err);
+              }
+            }
+          }, 300); // 延长延迟时间从100ms到300ms
         } else {
           alert('K线图数据获取失败: ' + response.data.errorMessage);
         }
       } catch (error) {
+        console.error('获取K线数据出错:', error);
         alert(error.message);
       } finally {
         this.loadingKline = false;
