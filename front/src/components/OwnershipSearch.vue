@@ -277,9 +277,9 @@ export default {
 
         if (response.data.status === 'SUCCESS') {
           this.ownershipList = response.data.stockOwnershipList;
-          this.filteredOwnerships = this.ownershipList; // 初始时不进行过滤，显示全部
+          this.filteredOwnerships = this.ownershipList;
         } else {
-          alert('获取持有股失败: ' + response.data.errorMessage);
+          this.$message.error('获取持有股失败: ' + response.data.errorMessage);
         }
       } catch (error) {
         alert('请求失败: ' + error.message);
@@ -309,23 +309,35 @@ export default {
           this.currentPrice = response.data.perPrice;
           this.showSellModal = true;
         } else if (response.data.status === 'ERROR') {
-          alert(response.data.errorMessage);
+          this.$message.error(response.data.errorMessage);
         }
       } catch (error) {
         alert(error.message);
       }
     },
     async confirmSell() {
-      if (this.sellQuantity <= 0 || this.sellQuantity > this.currentOwnership.hold_number) {
-        alert('无效的卖出数量');
+      const userID = localStorage.getItem('userID');
+      if (!userID) {
+        this.$message.warning('当前身份信息错误，无法卖出');
         return;
       }
 
-      const userID = localStorage.getItem('userID');
-      if (!userID) {
-        alert('当前身份信息错误，无法卖出');
+      if (this.sellQuantity <= 0 || this.sellQuantity > this.currentOwnership.hold_number) {
+        this.$message.warning('无效的卖出数量');
         return;
       }
+
+      try {
+        await this.$confirm(
+          `确认卖出该股${this.sellQuantity}支吗？`,
+          '提示',
+          {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }
+        );
+      } catch { return null; }
 
       try {
         const response = await this.$axios.post('/platform/sellStock', {
@@ -334,11 +346,11 @@ export default {
         });
 
         if (response.data.status === 'SUCCESS') {
-          alert('卖出成功，卖出收益为 ' + response.data.gain);
+          this.$message.success('卖出成功，卖出收益为 ' + response.data.gain);
           this.showSellModal = false;
           this.fetchOwnershipData(); // 更新持有股数据
         } else {
-          alert('卖出失败: ' + response.data.errorMessage);
+          this.$message.error('卖出失败: ' + response.data.errorMessage);
         }
       } catch (error) {
         alert('请求失败: ' + error.message);
@@ -385,14 +397,14 @@ body {
   min-width: 300px;
   background-color: #f9f9f9;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   padding: 20px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .chart-container:hover {
   transform: translateY(-5px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
 .chart {
@@ -415,7 +427,7 @@ body {
   border: 1px solid #dcdfe6;
   border-radius: 8px;
   font-size: 14px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   transition: border-color 0.3s;
 }
 
@@ -430,7 +442,7 @@ body {
   border: 1px solid #dcdfe6;
   border-radius: 8px;
   font-size: 14px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   transition: border-color 0.3s;
   margin-right: 0;
 }
@@ -474,13 +486,13 @@ body {
   background-color: #f9f9f9;
   padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .ownership-item:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .ownership-info {
@@ -617,6 +629,7 @@ body {
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -646,7 +659,7 @@ body {
   font-size: 16px;
   margin-bottom: 25px;
   transition: border-color 0.3s;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .modal-content input:focus {
@@ -729,15 +742,15 @@ body {
   .charts-section {
     flex-direction: column;
   }
-  
+
   .chart-container {
     width: 100%;
   }
-  
+
   .chart {
     height: 300px;
   }
-  
+
   .modal-content {
     width: 90%;
     padding: 20px;

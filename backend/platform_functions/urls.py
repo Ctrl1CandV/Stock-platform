@@ -2,6 +2,7 @@ from . import stock_basic_views, stock_detail_views
 from django.urls import path, include
 
 urlpatterns = [
+    path("getCSRF", stock_basic_views.getCSRF, name="get_csrf"),
     path("isTrading", stock_basic_views.isTrading, name="is_trading"),
     path("queryStockByName", stock_basic_views.queryStockByName, name="query_stock_by_name"),
     path("queryStockByCode", stock_basic_views.queryStockByCode, name="query_stock_by_code"),

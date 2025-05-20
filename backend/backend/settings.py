@@ -29,9 +29,6 @@ SECRET_KEY = "django-insecure-9kti@a^&mswr-tjosdgmsis)ososivawkuwt-5&u1bpu&-*+u-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', os.getenv('BACKEND_IP')]
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -58,7 +55,16 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-CORS_ORIGIN_ALLOW_ALL = True
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', os.getenv('BACKEND_IP')]
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_WHITELIST = [
+    f'http://{os.getenv("BACKEND_IP")}:8080'
+]
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    f'http://{os.getenv("BACKEND_IP")}:8080'
+]
 
 ROOT_URLCONF = "backend.urls"
 

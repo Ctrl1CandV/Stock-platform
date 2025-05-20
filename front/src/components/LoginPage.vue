@@ -92,16 +92,15 @@ export default {
             password: this.loginForm.password,
           });
           if (response.data.status === 'SUCCESS') {
-            alert(`用户登录成功，账号名: ${this.loginForm.username}`);
-
             // 跳转到用户界面，并保留userID
             const userID = response.data.user.user_id;
             const userName = response.data.user.user_name;
             localStorage.setItem('userID', userID);
             localStorage.setItem('userName', userName);
+            this.$message.success(`用户${userName}登录成功`);
             this.$router.push('/user')
           } else if (response.data.status === 'ERROR') {
-            alert("错误信息为:" + response.data.errorMessage);
+            this.$message.error("登录失败:" + response.data.errorMessage);
           }
         } else if (this.loginForm.role === 'manager') {
           const response = await this.$axios.post('/manager/login', {
@@ -109,12 +108,12 @@ export default {
             password: this.loginForm.password,
           });
           if (response.data.status === 'SUCCESS') {
-            alert(`管理员登录成功，账号名: ${this.loginForm.username}`);
+            this.$message.success('管理员登录成功');
 
             // 跳转到管理员界面
             this.$router.push('/manager')
           } else if (response.data.status === 'ERROR') {
-            alert("错误信息为:" + response.data.errorMessage);
+            this.$message.error("登录失败:" + response.data.errorMessage);
           }
         }
       } catch (error) {
@@ -129,13 +128,13 @@ export default {
           password: this.registerForm.password
         });
         if (response.data.status === 'SUCCESS') {
-          alert(`用户注册成功，用户名: ${this.registerForm.userName}`);
+          this.$message.success(`用户${this.registerForm.userName}注册成功`);
           this.activeTab = 'login';
 
           // 自动填充用户名，方便用户登录
           this.loginForm.username = this.registerForm.userName;
         } else if (response.data.status === 'ERROR') {
-          alert("错误信息为:" + response.data.errorMessage);
+          this.$message.error("注册失败:" + response.data.errorMessage);
         }
       } catch (error) {
         alert(error.message);

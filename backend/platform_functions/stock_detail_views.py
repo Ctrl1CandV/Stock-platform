@@ -1,5 +1,4 @@
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from . import stock_detail_functions
 from .tushare_client import ts, pro
@@ -15,8 +14,6 @@ import json
 股票详细页面的显示内容包含
 股票行情图、技术指标图、市盈率市净率变化图和公司财务数据
 '''
-
-@csrf_exempt
 @require_http_methods(['POST'])
 def updateAnnualDailyQuotes(request):
     ''' 获取年度日线行情并保存本地，用于模型训练和夏普比例的计算 '''
@@ -66,7 +63,6 @@ def updateAnnualDailyQuotes(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['GET'])
 def showStockQurve(request):
     ''' 显示日、周和月的行情数据 '''
@@ -88,13 +84,11 @@ def showStockQurve(request):
         cache_key = f'{stock_code}_{time_span}_{type}_stockQurveData'
         cache_result = cache.get(cache_key)
         if cache_result:
-            response['data'] = cache_result['data']
-            response['title'] = cache_result['title']
+            response['data'], response['title'] = cache_result['data'], cache_result['title']
         else:
             # type用int表示，1对应日线，2对应周线，3对应月线
             data, title = stock_detail_functions.get_stock_data(stock_code, time_span, type)
-            response['data'] = data
-            response['title'] = title
+            response['data'], response['title'] = data, title
             cache.set(cache_key, {'data': data, 'title': title}, 60 * 60 * 24)
         response['status'] = 'SUCCESS'
 
@@ -107,7 +101,6 @@ def showStockQurve(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['GET'])
 def showTechnicalIndicator(request):
     ''' 展示技术指标的变化图 '''
@@ -151,7 +144,6 @@ def showTechnicalIndicator(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['GET'])
 def getFinancialMetric(request):
     ''' 获取公司财务指标数据 '''
@@ -175,7 +167,6 @@ def getFinancialMetric(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['GET'])
 def showValuationRatio(request):
     ''' 展示股票估值比率的变化图 '''
@@ -207,7 +198,6 @@ def showValuationRatio(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['GET'])
 def gainIntroduction(request):
     ''' 获取公司简介信息 '''

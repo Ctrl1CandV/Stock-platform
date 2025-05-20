@@ -1,6 +1,5 @@
 from django.views.decorators.http import require_http_methods
 from django.core.exceptions import ObjectDoesNotExist
-from django.views.decorators.csrf import csrf_exempt
 from .models import user_accounts, manager
 from django.http import JsonResponse
 from django.db import transaction
@@ -10,8 +9,6 @@ import json
 管理员仅有三个针对用户的基础功能
 POST会改变数据，GET不会
 '''
-
-@csrf_exempt
 @require_http_methods(['POST'])
 def login(request):
     ''' 管理员登录 '''
@@ -45,7 +42,6 @@ def login(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['POST'])
 def deleteUser(request):
     ''' 伪删除用户账户 '''
@@ -78,7 +74,6 @@ def deleteUser(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['POST'])
 def editUserBalance(request):
     ''' 更改用户的余额 '''
@@ -120,7 +115,6 @@ def editUserBalance(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['GET'])
 def queryUsers(request):
     ''' 查询用户账户 '''

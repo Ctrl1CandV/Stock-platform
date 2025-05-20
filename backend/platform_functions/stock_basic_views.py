@@ -1,27 +1,32 @@
-from .models import user_accounts, stock_basic, stock_ownership, stock_transactions, stock_market, user_favorite_stocks
+from dotenv import load_dotenv
+from datetime import time
+import os, json
+import warnings
+
 from django.views.decorators.http import require_http_methods
-from stock_analyse.functions import get_previous_workday
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.core.exceptions import ObjectDoesNotExist
-from django.views.decorators.csrf import csrf_exempt
 from django.forms.models import model_to_dict
 from django.http import JsonResponse
 from django.core.cache import cache
-from .tushare_client import ts, pro
 from django.db import transaction
 from django.utils import timezone
-from datetime import time
-import json
-import os
 
-from dotenv import load_dotenv
+from .models import user_accounts, stock_basic, stock_ownership, stock_transactions, stock_market, user_favorite_stocks
+from stock_analyse.functions import get_previous_workday
+from .tushare_client import ts, pro
+
 load_dotenv()
-import warnings
 warnings.filterwarnings("ignore")
 
 '''
 证券查询页面主要包含，基于name或code的查询功能和股票的买入卖出功能
 此外还需要进行股票列表的更新，设定为启动runserver时自动调用
 '''
+@ensure_csrf_cookie
+def getCSRF(request):
+    return JsonResponse({"detail": "CSRF cookie set"})
+
 def tradable():
     # 测试模式不检查是否能够交易
     if os.getenv("RUN_MODE") == "TEST":
@@ -87,7 +92,6 @@ def cleanMarket():
     except Exception as e:
         print(f"清除stock_market表错误: {str(e)}")
 
-@csrf_exempt
 @require_http_methods(['GET'])
 def isTrading(request):
     ''' 判断当前是否可以交易 '''
@@ -104,7 +108,7 @@ def isTrading(request):
             quote = ts.realtime_quote(ts_code=stock_code)
             response['status'], response['perPrice'] = 'SUCCESS', round(quote['PRICE'][0], 2)
         else:
-            response['errorMessage'] = "不可交易"
+            response['errorMessage'] = "当前时间不可交易"
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
@@ -116,7 +120,6 @@ def isTrading(request):
     return JsonResponse(response)
 
 # 模糊查询
-@csrf_exempt
 @require_http_methods(['GET'])
 def queryStockByName(request):
     ''' 根据股票名称查询 '''
@@ -156,7 +159,6 @@ def queryStockByName(request):
     return JsonResponse(response)
 
 # 精确搜索
-@csrf_exempt
 @require_http_methods(['GET'])
 def queryStockByCode(request):
     ''' 根据股票代码查询 '''
@@ -194,7 +196,6 @@ def queryStockByCode(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['POST'])
 def buyStock(request):
     ''' 买入股票 '''
@@ -284,7 +285,6 @@ def buyStock(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['POST'])
 def sellStock(request):
     ''' 卖出持有股 '''
@@ -348,7 +348,6 @@ def sellStock(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['POST'])
 def addFavoriteStock(request):
     ''' 添加持有股 '''
@@ -390,8 +389,6 @@ def addFavoriteStock(request):
 
     return JsonResponse(response)
 
-
-@csrf_exempt
 @require_http_methods(['POST'])
 def removeFavoriteStock(request):
     ''' 删除持有股 '''
@@ -426,7 +423,6 @@ def removeFavoriteStock(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['GET'])
 def loadHomePageData(request):
     ''' 加载搜索主页的信息 '''

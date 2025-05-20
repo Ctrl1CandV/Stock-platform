@@ -1,5 +1,4 @@
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
 from platform_functions.models import stock_market
 from decimal import Decimal, getcontext
 from django.http import JsonResponse
@@ -11,7 +10,6 @@ import numpy as np
 import datetime
 import json
 
-@csrf_exempt
 @require_http_methods(['GET'])
 def forecastStock(request):
     ''' 使用Transformer进行股票收盘价的预测 '''
@@ -55,7 +53,6 @@ def forecastStock(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['GET'])
 def showZScore(request):
     ''' 展示股票的Z分模型得分 '''
@@ -92,7 +89,6 @@ def showZScore(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['GET'])
 def showSharpeRatio(request):
     ''' 展示夏普比率和当前的国债利率 '''

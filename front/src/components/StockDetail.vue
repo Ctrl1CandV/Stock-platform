@@ -252,9 +252,6 @@ export default {
     };
   },
   methods: {
-    sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    },
     async getIntroduction() {
       try {
         const response = await this.$axios.get('/platform/gainIntroduction', {
@@ -263,7 +260,7 @@ export default {
         if (response.data.status === 'SUCCESS') {
           this.stockIntroduction = response.data.introduction;
         } else if (response.data.status === 'ERROR') {
-          alert('公司简介获取失败:' + response.data.errorMessage);
+          this.$message.error('公司简介获取失败:' + response.data.errorMessage);
         }
       } catch (error) {
         alert(error.message);
@@ -506,7 +503,6 @@ export default {
         if (response.data.status === 'SUCCESS') {
           this.klineData = response.data.data;
           this.klineTitle = response.data.title;
-          console.log(this.klineData, this.klineTitle);
           
           // 确保DOM已经更新
           await this.$nextTick();
@@ -519,9 +515,10 @@ export default {
                 console.error('绘制K线图失败:', err);
               }
             }
-          }, 300); // 延长延迟时间从100ms到300ms
+          }, 300);
+          this.$message.success('K线图加载成功');
         } else {
-          alert('K线图数据获取失败: ' + response.data.errorMessage);
+          this.$message.error('K线图数据获取失败: ' + response.data.errorMessage);
         }
       } catch (error) {
         console.error('获取K线数据出错:', error);

@@ -4,7 +4,6 @@ from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse, StreamingHttpResponse
 from platform_functions.tushare_client import ts, pro
 from django.core.exceptions import ObjectDoesNotExist
-from django.views.decorators.csrf import csrf_exempt
 from django.forms.models import model_to_dict
 from django.db import transaction
 from django.utils import timezone
@@ -17,7 +16,6 @@ import os, re, json, requests
 3. 股票持仓查询
 4. 证券交易记录查询
 '''
-
 def validatePasswordComplexity(user_password: str):
     if len(user_password) < 8 or len(user_password) > 15:
         raise Exception("密码长度必须在8-15位之间")
@@ -32,7 +30,6 @@ def validatePasswordComplexity(user_password: str):
     if not re.match(allowed_pattern, user_password):
         raise Exception("密码只能包含字母、数字和'_'、'*'、'!'特殊字符")
 
-@csrf_exempt
 @require_http_methods(['POST'])
 def register(request):
     ''' 用户注册 '''
@@ -77,8 +74,6 @@ def register(request):
 
     return JsonResponse(response)
 
-
-@csrf_exempt
 @require_http_methods(['POST'])
 def login(request):
     ''' 用户登录 '''
@@ -112,7 +107,6 @@ def login(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['GET'])
 def gainUserInformation(request):
     ''' 获取用户个人信息 '''
@@ -139,7 +133,6 @@ def gainUserInformation(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['POST'])
 def updateProfile(request):
     ''' 补充用户个人信息 '''
@@ -178,7 +171,6 @@ def updateProfile(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['POST'])
 def updateBalance(request):
     ''' 更新用户余额 '''
@@ -214,7 +206,6 @@ def updateBalance(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['POST'])
 def changePassword(request):
     ''' 修改用户密码 '''
@@ -256,7 +247,6 @@ def changePassword(request):
     return JsonResponse(response)
 
 # 用户股票模块的功能
-@csrf_exempt
 @require_http_methods(['GET'])
 def getStockOwnership(request):
     ''' 查询用户股票持仓 '''
@@ -294,7 +284,6 @@ def getStockOwnership(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['GET'])
 def getTransactionRecords(request):
     ''' 查询用户交易记录 '''
@@ -330,7 +319,6 @@ def getTransactionRecords(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['GET'])
 def getFavoriteStocksInformation(request):
     ''' 获取用户自选股信息 '''
@@ -377,7 +365,6 @@ def getFavoriteStocksInformation(request):
 交易记录界面增加交易收益折线图
 '''
 
-@csrf_exempt
 @require_http_methods(['GET'])
 def ownershipPageLoad(request):
     ''' 加载用户持有股页面的图表 '''
@@ -425,7 +412,6 @@ def ownershipPageLoad(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['GET'])
 def transactionPageLoad(request):
     ''' 加载用户交易记录界面的图表 '''
@@ -455,7 +441,6 @@ def transactionPageLoad(request):
 
     return JsonResponse(response)
 
-@csrf_exempt
 @require_http_methods(['POST'])
 def dialogueLocalModel(request):
     ''' 使用本地部署AI,进行决策问答(流式返回给前端) '''

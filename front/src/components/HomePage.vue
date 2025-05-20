@@ -153,9 +153,8 @@ export default {
           this.ShenzhenTop10 = response.data.ShenzhenTop10;
           this.newsInformation = response.data.newsInformation;
           this.significantIndex = response.data.significantIndex;
-          console.log(this.ShanghaiTop10, this.ShenzhenTop10, this.newsInformation, this.significantIndex);
         } else {
-          alert('搜索页面加载失败: ' + response.data.errorMessage);
+          this.$message.error('搜索页面加载失败: ' + response.data.errorMessage);
         }
       } catch (error) {
         alert('请求失败: ' + error.message);
@@ -169,9 +168,9 @@ export default {
         });
 
         if (response.data.status === 'SUCCESS') {
-          alert('添加自选股成功');
+          this.$message.success('添加自选股成功');
         } else {
-          alert('添加自选股失败: ' + response.data.errorMessage);
+          this.$message.error('添加自选股失败: ' + response.data.errorMessage);
         }
       } catch (error) {
         alert('请求失败: ' + error.message);
@@ -188,7 +187,7 @@ export default {
           localStorage.setItem('stockCode', stock.stockCode);
           localStorage.setItem('stockName', stock.stockName);
         } else {
-          alert('跳转失败: ' + response.data.errorMessage);
+          this.$message.error('跳转失败: ' + response.data.errorMessage);
         }
       } catch (error) {
         alert('请求失败: ' + error.message);
@@ -197,7 +196,7 @@ export default {
     async searchStocks() {
       try {
         if (!this.searchKeyword) {
-          alert("关键词不得为空");
+          this.$message.warning("关键词不得为空");
           return null;
         }
 
@@ -209,7 +208,7 @@ export default {
             this.stockList = response.data.stockInformation;
             this.currentPage = 1;
           } else if (response.data.status === 'ERROR') {
-            alert("查询失败:" + response.data.errorMessage);
+            this.$message.error("查询失败:" + response.data.errorMessage);
           }
         } else if (this.searchType === 'name') {
           const response = await this.$axios.get('/platform/queryStockByName', {
@@ -219,7 +218,7 @@ export default {
             this.stockList = response.data.stockInformationList;
             this.currentPage = 1;
           } else if (response.data.status === 'ERROR') {
-            alert("查询失败:" + response.data.errorMessage);
+            this.$message.error("查询失败:" + response.data.errorMessage);
           }
         }
       } catch (error) {
@@ -236,7 +235,7 @@ export default {
           this.currentPrice = response.data.perPrice;
           this.showBuyModal = true;
         } else if (response.data.status === 'ERROR') {
-          alert(response.data.errorMessage);
+          this.$message.warning(response.data.errorMessage);
         }
       } catch (error) {
         alert(error.message);
@@ -245,14 +244,26 @@ export default {
     async confirmBuy() {
       const userID = localStorage.getItem('userID');
       if (!userID) {
-        alert('当前身份信息错误，无法购买');
+        this.$message.warning('当前身份信息错误，无法购买');
         return null;
       }
 
       if (this.buyQuantity <= 0) {
-        alert('无效的买入金额');
+        this.$message.warning('无效的买入金额');
         return null;
       }
+
+      try {
+        await this.$confirm(
+          `确认买入${this.currentStock.stockName}股票${this.buyQuantity}支吗？`,
+          '提示',
+          {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }
+        );
+      } catch { return null; }
 
       try {
         const response = await this.$axios.post('/platform/buyStock', {
@@ -261,10 +272,10 @@ export default {
           buyNumber: this.buyQuantity
         });
         if (response.data.status === 'SUCCESS') {
-          alert('买入成功，购买金额为' + response.data.amountSpent);
+          this.$message.success('买入成功，购买金额为' + response.data.amountSpent);
           this.showBuyModal = false;
         } else if (response.data.status === 'ERROR') {
-          alert('买入失败:' + response.data.errorMessage);
+          this.$message.error('买入失败:' + response.data.errorMessage);
         }
       } catch (error) {
         alert(error.message);

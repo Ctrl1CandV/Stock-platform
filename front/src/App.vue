@@ -7,6 +7,15 @@
 <script>
 export default {
   name: 'App',
+  async created() {
+    try {
+      await this.$axios.get(
+        '/platform/getCSRF', { withCredentials: true }
+      );
+    } catch (error) {
+      this.$message.error("服务器失联！")
+    }
+  }
 };
 </script>
 
