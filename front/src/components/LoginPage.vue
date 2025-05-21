@@ -95,8 +95,11 @@ export default {
             // 跳转到用户界面，并保留userID
             const userID = response.data.user.user_id;
             const userName = response.data.user.user_name;
+            const Token = response.data.Token;
             localStorage.setItem('userID', userID);
             localStorage.setItem('userName', userName);
+            localStorage.setItem('Token', Token);
+
             this.$message.success(`用户${userName}登录成功`);
             this.$router.push('/user')
           } else if (response.data.status === 'ERROR') {

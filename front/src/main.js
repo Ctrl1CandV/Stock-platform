@@ -19,6 +19,10 @@ Vue.prototype.$axios = axios;
 axios.interceptors.request.use(
   config => {
     const token = getCSRFToken();
+    const authToken = localStorage.getItem('Token');
+    if (authToken) {
+      config.headers.Authorization = `Bearer ${authToken}`;
+    }
     if (token) {
       config.headers['X-CSRFToken'] = token;
     }

@@ -14,7 +14,7 @@ import ModelDialogue from "./components/ModelDialogue.vue";
 
 Vue.use(Router);
 
-export default new Router({
+const router = new Router({
     mode: 'history',
     routes: [
         {
@@ -52,3 +52,15 @@ export default new Router({
         },
     ],
 });
+
+// 全局前置守卫
+router.beforeEach((to, from, next) => {
+    const isLoggedIn = !!localStorage.getItem('userID');
+    if (to.path !== '/login' && !isLoggedIn) {
+        next('/login');
+    } else {
+        next();
+    }
+});
+
+export default router;

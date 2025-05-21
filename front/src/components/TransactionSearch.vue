@@ -25,7 +25,8 @@
 
     <!-- 交易记录列表 -->
     <div class="transaction-list">
-      <div v-for="transaction in paginatedTransactions" :key="transaction.stock_code + transaction.transaction_type"
+      <div v-for="transaction in paginatedTransactions"
+        :key="`${transaction.stock_code}_${transaction.transaction_type}_${transaction.transaction_date}`"
         class="transaction-item">
         <div class="transaction-info">
           <p>交易类型: {{ transaction.transaction_type === 0 ? '买入' : '卖出' }}</p>
@@ -104,7 +105,7 @@ export default {
             this.initTransactionProfitChart();
           });
         } else {
-          alert('获取图表数据失败: ' + response.data.errorMessage);
+          this.$message.error('获取图表数据失败: ' + response.data.errorMessage);
         }
       } catch (error) {
         alert('请求失败: ' + error.message);
@@ -214,7 +215,7 @@ export default {
     async fetchTransactionData() {
       const userID = localStorage.getItem('userID');
       if (!userID) {
-        alert('无法获取用户ID，请重新登录');
+        this.$message.error('无法获取用户ID，请重新登录');
         return;
       }
 
@@ -227,7 +228,7 @@ export default {
           this.transactionList = response.data.stockTransactionList;
           this.filteredTransactions = this.transactionList; // 初始显示全部数据
         } else {
-          alert('获取交易记录失败: ' + response.data.errorMessage);
+          this.$message.error('获取交易记录失败: ' + response.data.errorMessage);
         }
       } catch (error) {
         alert('请求失败: ' + error.message);
@@ -236,19 +237,24 @@ export default {
 
     // 根据搜索条件过滤交易记录
     searchTransactions() {
-      if (!this.searchKeyword) {
-        this.filteredTransactions = this.transactionList;
+      this.currentPage = 1;
+      if (this.searchKeyword === '') {
+        this.filteredTransactions = [...this.transactionList]; 
         return;
       }
+      const keywordLower = this.searchKeyword.toLowerCase();
 
       this.filteredTransactions = this.transactionList.filter((transaction) => {
         if (this.searchType === 'type') {
           return transaction.transaction_type.toString() === this.searchKeyword;
         } else if (this.searchType === 'code') {
-          return transaction.stock_code.includes(this.searchKeyword);
+          return transaction.stock_code && typeof transaction.stock_code === 'string' &&
+            transaction.stock_code.toLowerCase().includes(keywordLower);
         } else if (this.searchType === 'name') {
-          return transaction.stock_name.includes(this.searchKeyword);
+          return transaction.stock_name && typeof transaction.stock_name === 'string' &&
+            transaction.stock_name.toLowerCase().includes(keywordLower);
         }
+        return false;
       });
     },
   },
@@ -292,14 +298,14 @@ body {
   min-width: 300px;
   background-color: #f9f9f9;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   padding: 20px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .chart-container:hover {
   transform: translateY(-5px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
 .chart {
@@ -322,7 +328,7 @@ body {
   border: 1px solid #dcdfe6;
   border-radius: 8px;
   font-size: 14px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   transition: border-color 0.3s;
 }
 
@@ -374,13 +380,13 @@ body {
   background-color: #f9f9f9;
   padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .transaction-item:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .transaction-info p {
@@ -466,11 +472,11 @@ body {
   .charts-section {
     flex-direction: column;
   }
-  
+
   .chart-container {
     width: 100%;
   }
-  
+
   .chart {
     height: 300px;
   }
@@ -482,6 +488,7 @@ body {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

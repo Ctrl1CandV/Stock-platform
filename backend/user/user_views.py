@@ -5,9 +5,13 @@ from django.http import JsonResponse, StreamingHttpResponse
 from platform_functions.tushare_client import ts, pro
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms.models import model_to_dict
+from user.validator import token_required
+from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
+from django.conf import settings
 import os, re, json, requests
+import jwt, time
 
 '''
 用户模块功能：
@@ -81,7 +85,8 @@ def login(request):
     response = {
         'status': 'ERROR',
         'user': None,
-        'errorMessage': None
+        'errorMessage': None,
+        'Token': None
     }
     try:
         body = json.loads(request.body.decode('utf-8'))
@@ -90,6 +95,25 @@ def login(request):
 
         user = user_accounts.objects.get(user_email=user_email)
         if user.checkPassword(user_password):
+            cache_key = f'user_{user.user_id}_token'
+            cache_result = cache.get(cache_key)
+            if cache_result:
+                response['Token'] = cache_result
+            else:
+                # 使用JWT生成Token，过期时间为七天
+                current_time = int(time.time())
+                expire_time = current_time + 7 * 24 * 60 * 60
+
+                payload = {
+                    'user_id': user.user_id,
+                    'email': user.user_email,
+                    'exp': expire_time,
+                    'iat': current_time
+                }
+                token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+                cache.set(cache_key, token, timeout=7 * 24 * 60 * 60)
+                response['Token'] = token
+
             response['status'], response['user'] = 'SUCCESS', model_to_dict(user)
         else:
             response['errorMessage'] = "密码错误"
@@ -108,6 +132,7 @@ def login(request):
     return JsonResponse(response)
 
 @require_http_methods(['GET'])
+@token_required
 def gainUserInformation(request):
     ''' 获取用户个人信息 '''
 
@@ -134,6 +159,7 @@ def gainUserInformation(request):
     return JsonResponse(response)
 
 @require_http_methods(['POST'])
+@token_required
 def updateProfile(request):
     ''' 补充用户个人信息 '''
 
@@ -156,8 +182,7 @@ def updateProfile(request):
                     setattr(user, field, value)
             user.save()
 
-            response['status'] = 'SUCCESS'
-            response['userID'] = user_id
+            response['status'], response['userID'] = 'SUCCESS', user_id
 
     except json.JSONDecodeError:
         response['errorMessage'] = "无效的JSON负载"
@@ -172,6 +197,7 @@ def updateProfile(request):
     return JsonResponse(response)
 
 @require_http_methods(['POST'])
+@token_required
 def updateBalance(request):
     ''' 更新用户余额 '''
 
@@ -207,6 +233,7 @@ def updateBalance(request):
     return JsonResponse(response)
 
 @require_http_methods(['POST'])
+@token_required
 def changePassword(request):
     ''' 修改用户密码 '''
 
@@ -248,6 +275,7 @@ def changePassword(request):
 
 # 用户股票模块的功能
 @require_http_methods(['GET'])
+@token_required
 def getStockOwnership(request):
     ''' 查询用户股票持仓 '''
 
@@ -285,6 +313,7 @@ def getStockOwnership(request):
     return JsonResponse(response)
 
 @require_http_methods(['GET'])
+@token_required
 def getTransactionRecords(request):
     ''' 查询用户交易记录 '''
 
@@ -320,6 +349,7 @@ def getTransactionRecords(request):
     return JsonResponse(response)
 
 @require_http_methods(['GET'])
+@token_required
 def getFavoriteStocksInformation(request):
     ''' 获取用户自选股信息 '''
 
@@ -366,6 +396,7 @@ def getFavoriteStocksInformation(request):
 '''
 
 @require_http_methods(['GET'])
+@token_required
 def ownershipPageLoad(request):
     ''' 加载用户持有股页面的图表 '''
 
@@ -413,6 +444,7 @@ def ownershipPageLoad(request):
     return JsonResponse(response)
 
 @require_http_methods(['GET'])
+@token_required
 def transactionPageLoad(request):
     ''' 加载用户交易记录界面的图表 '''
 

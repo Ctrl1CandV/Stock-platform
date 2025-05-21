@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from .models import user_accounts, stock_basic, stock_ownership, stock_transactions, stock_market, user_favorite_stocks
 from stock_analyse.functions import get_previous_workday
+from user.validator import token_required
 from .tushare_client import ts, pro
 
 load_dotenv()
@@ -197,6 +198,7 @@ def queryStockByCode(request):
     return JsonResponse(response)
 
 @require_http_methods(['POST'])
+@token_required
 def buyStock(request):
     ''' 买入股票 '''
 
@@ -286,6 +288,7 @@ def buyStock(request):
     return JsonResponse(response)
 
 @require_http_methods(['POST'])
+@token_required
 def sellStock(request):
     ''' 卖出持有股 '''
 
@@ -349,6 +352,7 @@ def sellStock(request):
     return JsonResponse(response)
 
 @require_http_methods(['POST'])
+@token_required
 def addFavoriteStock(request):
     ''' 添加持有股 '''
 
@@ -390,6 +394,7 @@ def addFavoriteStock(request):
     return JsonResponse(response)
 
 @require_http_methods(['POST'])
+@token_required
 def removeFavoriteStock(request):
     ''' 删除持有股 '''
 

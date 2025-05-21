@@ -108,15 +108,15 @@ def showTechnicalIndicator(request):
     response = {
         'status': 'ERROR',
         'errorMessage': None,
-        'indicatorCharts': None,
+        'indicatorData': None,
     }
     try:
         stock_code = request.GET.get('stockCode')
 
-        cache_key = f'{stock_code}_technical_indicator_charts'
+        cache_key = f'{stock_code}_technical_indicator_data'
         cache_result = cache.get(cache_key)
         if cache_result:
-            response['indicatorCharts'] = cache_result
+            response['indicatorData'] = cache_result
         else:
             stock_markets = stock_market.objects.filter(stock_code=stock_code).order_by('trade_date')
             if stock_markets.exists():
@@ -127,11 +127,11 @@ def showTechnicalIndicator(request):
                     'low': 'low',
                     'close': 'close'
                 }, inplace=True)
-                charts = stock_detail_functions.technical_indicator_charts(stock_code, data)
+                indicator_data = stock_detail_functions.technical_indicator_data(stock_code, data)
             else:
-                charts = stock_detail_functions.technical_indicator_charts(stock_code)
-            response['indicatorCharts'] = charts
-            cache.set(cache_key, charts, 60 * 60 * 24)
+                indicator_data = stock_detail_functions.technical_indicator_data(stock_code)
+            response['indicatorData'] = indicator_data
+            cache.set(cache_key, indicator_data, 60 * 60 * 24)
         response['status'] = 'SUCCESS'
         
 
@@ -174,19 +174,20 @@ def showValuationRatio(request):
     response = {
         'status': 'ERROR',
         'errorMessage': None,
-        'valuationRatioImage': None,
+        'valuationData': None,
     }
     try:
         stock_code = request.GET.get('stockCode')
 
-        cache_key = f'{stock_code}_valuation_ratio_image'
+        cache_key = f'{stock_code}_valuation_ratio_data'
         cache_result = cache.get(cache_key)
         if cache_result:
-            response['valuationRatioImage'] = cache_result
+            response['valuationData'] = cache_result
         else:
-            image = stock_detail_functions.valuation_ratio_charts(stock_code)
-            response['valuationRatioImage'] = image
-            cache.set(cache_key, image, 60 * 60 * 24)
+            valuation_data = stock_detail_functions.valuation_ratio_data(stock_code)
+            if not valuation_data == []:
+                response['valuationData'] = valuation_data
+                cache.set(cache_key, valuation_data, 60 * 60 * 24)
         response['status'] = 'SUCCESS'
 
     except json.JSONDecodeError:

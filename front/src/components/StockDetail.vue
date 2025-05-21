@@ -35,20 +35,22 @@
       <h2>技术指标</h2>
       <div class="indicators">
         <label for="indicator-type">选择技术指标：</label>
-        <select v-model="indicatorType" id="indicator-type" @change="getTechnicalIndicator">
-          <option value="MACDImage">MACD</option>
-          <option value="KDJImage">KDJ</option>
-          <option value="BOLLImage">BOLL</option>
-          <option value="BIASImage">BIAS</option>
-          <option value="RSIImage">RSI</option>
-          <option value="WRImage">WR</option>
+        <select v-model="indicatorType" id="indicator-type" @change="updateIndicatorChart">
+          <option value="MACD_12_26_9">MACD</option>
+          <option value="K_9_3">KDJ</option>
+          <option value="BBM_5_2.0">BOLL</option>
+          <option value="BIAS_SMA_26">BIAS</option>
+          <option value="RSI_14">RSI</option>
+          <option value="WILLR_14">WR</option>
         </select>
       </div>
       <div v-if="loadingIndicator" class="loading-container">
         <div class="loading-spinner"></div>
         <p>技术指标加载中...</p>
       </div>
-      <img v-else :src="indicatorImages[indicatorType]" alt="技术指标图" />
+      <div v-else class="chart-container">
+        <div id="indicator-chart" style="width: 100%; height: 400px;"></div>
+      </div>
     </div>
 
     <!-- 公司财务指标 -->
@@ -109,7 +111,9 @@
         <div class="loading-spinner"></div>
         <p>估值比率图加载中...</p>
       </div>
-      <img v-else :src="valuationImage" alt="估值比率变化图" />
+      <div v-else class="chart-container">
+        <div id="valuation-chart" style="width: 100%; height: 400px;"></div>
+      </div>
     </div>
 
     <!-- 预测分析区域 -->
@@ -235,12 +239,18 @@ export default {
       klineData: [],
       klineTitle: '',
       chart: null,
-      indicatorImages: {},
-      valuationImage: '',
+      indicatorChart: null,
+      valuationChart: null,
+      indicatorData: [],
+      valuationData: [],
       chartType: '1',
       timeSpan: 500,
-      indicatorType: 'MACDImage',
+      indicatorType: 'MACD_12_26_9',
       financialMetrics: [],
+      loadingKline: false,
+      loadingIndicator: false,
+      loadingValuation: false,
+      loadingFinancial: false,
 
       forecastVisible: false,
       nextClose: 0,
@@ -249,7 +259,32 @@ export default {
       X: [],
       sharpeRatio: 0,
       rateMap: {},
+
+      // 技术指标名称映射
+      indicatorNameMap: {
+        'MACD_12_26_9': 'MACD',
+        'K_9_3': 'KDJ',
+        'BBM_5_2.0': 'BOLL',
+        'BIAS_SMA_26': 'BIAS',
+        'RSI_14': 'RSI',
+        'WILLR_14': 'WR'
+      },
+
+      // 估值指标名称映射
+      valuationNameMap: {
+        'pe': '市盈率(PE)',
+        'pb': '市净率(PB)',
+        'ps': '市销率(PS)'
+      }
     };
+  },
+  computed: {
+    getSharpeRatioClass() {
+      if (this.sharpeRatio >= 0) return 'excellent';
+      if (this.sharpeRatio >= -50) return 'good';
+      if (this.sharpeRatio >= -100) return 'average';
+      return 'poor';
+    }
   },
   methods: {
     async getIntroduction() {
@@ -274,20 +309,20 @@ export default {
         this.chart.dispose();
       }
       this.chart = echarts.init(chartDom);
-      
+
       // 处理日期，减少横坐标密集问题
       const dates = data.map(item => item.trade_date);
       const displayDates = [];
       const step = Math.ceil(dates.length / 10);
-      
+
       for (let i = 0; i < dates.length; i++) {
         displayDates.push(i % step === 0 ? dates[i] : '');
       }
-      
+
       // 设置K线图和交易量图表选项
       const option = {
         backgroundColor: '#fff',
-        title: { 
+        title: {
           text: title,
           left: 'center',
           textStyle: {
@@ -300,7 +335,7 @@ export default {
         },
         tooltip: {
           trigger: 'axis',
-          axisPointer: { 
+          axisPointer: {
             type: 'cross',
             lineStyle: {
               color: '#999',
@@ -310,7 +345,7 @@ export default {
           }
         },
         axisPointer: {
-          link: {xAxisIndex: 'all'}
+          link: { xAxisIndex: 'all' }
         },
         grid: [{
           left: '3%',
@@ -327,24 +362,24 @@ export default {
           {
             type: 'category',
             data: dates,
-            axisLabel: { 
+            axisLabel: {
               rotate: 45,
-              formatter: function(value, index) {
+              formatter: function (value, index) {
                 return displayDates[index];
               }
             },
             boundaryGap: false,
-            axisLine: {lineStyle: {color: '#8392A5'}},
-            splitLine: {show: false}
+            axisLine: { lineStyle: { color: '#8392A5' } },
+            splitLine: { show: false }
           },
           {
             type: 'category',
             gridIndex: 1,
             data: dates,
-            axisLabel: {show: false},
-            axisLine: {lineStyle: {color: '#8392A5'}},
-            axisTick: {show: false},
-            splitLine: {show: false}
+            axisLabel: { show: false },
+            axisLine: { lineStyle: { color: '#8392A5' } },
+            axisTick: { show: false },
+            splitLine: { show: false }
           }
         ],
         yAxis: [
@@ -353,10 +388,10 @@ export default {
             splitArea: {
               show: true,
               areaStyle: {
-                color: ['rgba(250,250,250,0.1)','rgba(240,240,240,0.1)']
+                color: ['rgba(250,250,250,0.1)', 'rgba(240,240,240,0.1)']
               }
             },
-            axisLine: {lineStyle: {color: '#8392A5'}},
+            axisLine: { lineStyle: { color: '#8392A5' } },
             splitLine: {
               show: true,
               lineStyle: {
@@ -369,10 +404,10 @@ export default {
             scale: true,
             gridIndex: 1,
             splitNumber: 2,
-            axisLabel: {show: false},
-            axisLine: {show: false},
-            axisTick: {show: false},
-            splitLine: {show: false}
+            axisLabel: { show: false },
+            axisLine: { show: false },
+            axisTick: { show: false },
+            splitLine: { show: false }
           }
         ],
         dataZoom: [
@@ -465,12 +500,14 @@ export default {
       };
 
       this.chart.setOption(option);
-      
+
       // 添加窗口大小变化时自动调整图表大小
       window.addEventListener('resize', () => {
-        this.chart.resize();
+        if (this.chart) {
+          this.chart.resize();
+        }
       });
-      
+
       // 计算移动平均线函数
       function calculateMA(dayCount, data) {
         var result = [];
@@ -488,7 +525,6 @@ export default {
         return result;
       }
     },
-
     async getStockQurve() {
       try {
         this.loadingKline = true;
@@ -503,7 +539,7 @@ export default {
         if (response.data.status === 'SUCCESS') {
           this.klineData = response.data.data;
           this.klineTitle = response.data.title;
-          
+
           // 确保DOM已经更新
           await this.$nextTick();
           // 使用更长的延迟确保DOM完全渲染
@@ -516,7 +552,6 @@ export default {
               }
             }
           }, 300);
-          this.$message.success('K线图加载成功');
         } else {
           this.$message.error('K线图数据获取失败: ' + response.data.errorMessage);
         }
@@ -529,17 +564,123 @@ export default {
     },
     async getTechnicalIndicator() {
       try {
+        this.loadingIndicator = true;
         const response = await this.$axios.get('/platform/showTechnicalIndicator', {
           params: { stockCode: this.stockCode }
         });
         if (response.data.status === 'SUCCESS') {
-          this.indicatorImages = response.data.indicatorCharts;
+          this.indicatorData = response.data.indicatorData;
+          await this.$nextTick();
+          // 添加延迟确保DOM完全渲染
+          setTimeout(() => {
+            this.updateIndicatorChart();
+          }, 300);
         } else if (response.data.status === 'ERROR') {
-          alert('技术指标变化图获取失败:' + response.data.errorMessage);
+          this.$message.error('技术指标变化图获取失败:' + response.data.errorMessage);
         }
       } catch (error) {
-        alert(error.message);
+        console.error('获取技术指标出错:', error);
+        this.$message.error(error.message);
+      } finally {
+        this.loadingIndicator = false;
       }
+    },
+    updateIndicatorChart() {
+      if (!this.indicatorData || this.indicatorData.length === 0) {
+        console.warn('技术指标数据为空，无法绘制图表');
+        return;
+      }
+
+      const chartDom = document.getElementById('indicator-chart');
+      if (!chartDom) {
+        console.warn('找不到技术指标图表DOM元素');
+        return;
+      }
+
+      if (this.indicatorChart) {
+        this.indicatorChart.dispose();
+      }
+
+      this.indicatorChart = echarts.init(chartDom);
+
+      // 提取日期和选定的指标数据
+      const dates = this.indicatorData.map(item => item.trade_date);
+      const values = this.indicatorData.map(item => item[this.indicatorType]);
+
+      console.log('绘制技术指标图表:', this.indicatorType);
+      console.log('日期数据:', dates);
+      console.log('指标值:', values);
+
+      // 设置图表选项
+      const option = {
+        title: {
+          text: this.indicatorNameMap[this.indicatorType] + '指标变化',
+          left: 'center'
+        },
+        tooltip: {
+          trigger: 'axis',
+          formatter: '{b}: {c}'
+        },
+        xAxis: {
+          type: 'category',
+          data: dates,
+          axisLabel: {
+            rotate: 45,
+            interval: Math.floor(dates.length / 10)
+          }
+        },
+        yAxis: {
+          type: 'value',
+          scale: true
+        },
+        dataZoom: [
+          {
+            type: 'inside',
+            start: 0,
+            end: 100
+          },
+          {
+            type: 'slider',
+            start: 0,
+            end: 100
+          }
+        ],
+        series: [
+          {
+            name: this.indicatorNameMap[this.indicatorType],
+            type: 'line',
+            data: values,
+            smooth: true,
+            lineStyle: {
+              width: 2
+            },
+            itemStyle: {
+              color: '#5470c6'
+            },
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                {
+                  offset: 0,
+                  color: 'rgba(84, 112, 198, 0.5)'
+                },
+                {
+                  offset: 1,
+                  color: 'rgba(84, 112, 198, 0.1)'
+                }
+              ])
+            }
+          }
+        ]
+      };
+
+      this.indicatorChart.setOption(option);
+
+      // 添加窗口大小变化时自动调整图表大小
+      window.addEventListener('resize', () => {
+        if (this.indicatorChart) {
+          this.indicatorChart.resize();
+        }
+      });
     },
     async getFinancialMetric() {
       try {
@@ -557,17 +698,173 @@ export default {
     },
     async getValuationRatio() {
       try {
+        this.loadingValuation = true;
         const response = await this.$axios.get('/platform/showValuationRatio', {
           params: { stockCode: this.stockCode }
         });
         if (response.data.status === 'SUCCESS') {
-          this.valuationImage = 'data:image/png;base64,' + response.data.valuationRatioImage;
+          this.valuationData = response.data.valuationData;
+          await this.$nextTick();
+          // 添加延迟确保DOM完全渲染
+          setTimeout(() => {
+            this.drawValuationChart();
+          }, 300);
         } else if (response.data.status === 'ERROR') {
-          alert('股票估值比率变化图获取失败:' + response.data.errorMessage);
+          this.$message.error('股票估值比率变化图获取失败:' + response.data.errorMessage);
         }
       } catch (error) {
-        alert(error.message);
+        console.error('获取估值比率出错:', error);
+        this.$message.error(error.message);
+      } finally {
+        this.loadingValuation = false;
       }
+    },
+
+    drawValuationChart() {
+      if (!this.valuationData || this.valuationData.length === 0) {
+        console.warn('估值数据为空，无法绘制图表');
+        return;
+      }
+
+      const chartDom = document.getElementById('valuation-chart');
+      if (!chartDom) {
+        console.warn('找不到估值图表DOM元素');
+        return;
+      }
+
+      if (this.valuationChart) {
+        this.valuationChart.dispose();
+      }
+
+      this.valuationChart = echarts.init(chartDom);
+
+      // 提取日期和估值指标数据
+      const dates = this.valuationData.map(item => item.trade_date);
+      const peValues = this.valuationData.map(item => item.pe);
+      const pbValues = this.valuationData.map(item => item.pb);
+      const psValues = this.valuationData.map(item => item.ps);
+
+      // 设置图表选项
+      const option = {
+        title: {
+          text: '股票估值比率变化',
+          left: 'center'
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'cross'
+          }
+        },
+        legend: {
+          data: ['市盈率(PE)', '市净率(PB)', '市销率(PS)'],
+          top: '30px'
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '10%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          data: dates,
+          axisLabel: {
+            rotate: 45,
+            interval: Math.floor(dates.length / 10)
+          }
+        },
+        yAxis: [
+          {
+            type: 'value',
+            name: '市盈率/市销率',
+            position: 'left',
+            axisLine: {
+              show: true,
+              lineStyle: {
+                color: '#5470c6'
+              }
+            },
+            axisLabel: {
+              formatter: '{value}'
+            }
+          },
+          {
+            type: 'value',
+            name: '市净率',
+            position: 'right',
+            axisLine: {
+              show: true,
+              lineStyle: {
+                color: '#91cc75'
+              }
+            },
+            axisLabel: {
+              formatter: '{value}'
+            }
+          }
+        ],
+        dataZoom: [
+          {
+            type: 'inside',
+            start: 0,
+            end: 100
+          },
+          {
+            type: 'slider',
+            start: 0,
+            end: 100
+          }
+        ],
+        series: [
+          {
+            name: '市盈率(PE)',
+            type: 'line',
+            data: peValues,
+            smooth: true,
+            lineStyle: {
+              width: 2
+            },
+            itemStyle: {
+              color: '#5470c6'
+            }
+          },
+          {
+            name: '市净率(PB)',
+            type: 'line',
+            yAxisIndex: 1,
+            data: pbValues,
+            smooth: true,
+            lineStyle: {
+              width: 2
+            },
+            itemStyle: {
+              color: '#91cc75'
+            }
+          },
+          {
+            name: '市销率(PS)',
+            type: 'line',
+            data: psValues,
+            smooth: true,
+            lineStyle: {
+              width: 2
+            },
+            itemStyle: {
+              color: '#fac858'
+            }
+          }
+        ]
+      };
+
+      this.valuationChart.setOption(option);
+
+      // 添加窗口大小变化时自动调整图表大小
+      window.addEventListener('resize', () => {
+        if (this.valuationChart) {
+          this.valuationChart.resize();
+        }
+      });
     },
     // 请求股票数据
     async fetchStockData() {
@@ -632,6 +929,23 @@ export default {
   },
   created() {
     this.fetchStockData();
+  },
+  beforeDestroy() {
+    // 清理图表实例，避免内存泄漏
+    if (this.chart) {
+      this.chart.dispose();
+      this.chart = null;
+    }
+    if (this.indicatorChart) {
+      this.indicatorChart.dispose();
+      this.indicatorChart = null;
+    }
+    if (this.valuationChart) {
+      this.valuationChart.dispose();
+      this.valuationChart = null;
+    }
+    // 移除事件监听器
+    window.removeEventListener('resize', () => { });
   }
 };
 </script>
@@ -751,11 +1065,42 @@ input:focus {
   flex-wrap: wrap;
 }
 
+.chart-container {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  margin-top: 16px;
+  overflow: hidden;
+}
+
 /* 技术指标 */
 .indicators {
-  margin: 20px 0;
   display: flex;
   align-items: center;
+  margin-bottom: 16px;
+}
+
+.indicators label {
+  margin-right: 10px;
+  font-weight: 500;
+}
+
+.indicators select {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #d0d7de;
+  background-color: #fff;
+  font-size: 14px;
+  color: #24292f;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.indicators select:hover,
+.indicators select:focus {
+  border-color: #3f51b5;
+  outline: none;
 }
 
 /* 财务表格 */
