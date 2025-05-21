@@ -66,6 +66,14 @@ CSRF_TRUSTED_ORIGINS = [
     f'http://{os.getenv("BACKEND_IP")}:8080'
 ]
 
+EMAIL_HOST = "smtp.qq.com"
+EMAIL_PORT = 25
+EMAIL_HOST_USER = "1148781323@qq.com"
+EMAIL_HOST_PASSWORD = "kyiuiocknnqmjccj"
+EMAIL_USE_TLS = True
+EMAIL_FROM = "1148781323@qq.com"
+EMAIL_TITLE = '邮箱验证码'
+
 ROOT_URLCONF = "backend.urls"
 
 TEMPLATES = [

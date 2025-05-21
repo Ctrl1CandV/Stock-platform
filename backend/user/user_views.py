@@ -1,17 +1,20 @@
-from .models import user_accounts, stock_ownership, stock_transactions, user_favorite_stocks, stock_basic
 from email_validator import validate_email, EmailNotValidError
+import os, json, requests
+import jwt, time
+
+from .models import user_accounts, stock_ownership, stock_transactions, user_favorite_stocks, stock_basic
+from utils.tools import validatePasswordComplexity, send_verification_code_code
+from utils.validator import token_required
+from utils.tushare_client import ts, pro
+
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse, StreamingHttpResponse
-from platform_functions.tushare_client import ts, pro
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms.models import model_to_dict
-from user.validator import token_required
 from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
 from django.conf import settings
-import os, re, json, requests
-import jwt, time
 
 '''
 用户模块功能：
@@ -20,19 +23,35 @@ import jwt, time
 3. 股票持仓查询
 4. 证券交易记录查询
 '''
-def validatePasswordComplexity(user_password: str):
-    if len(user_password) < 8 or len(user_password) > 15:
-        raise Exception("密码长度必须在8-15位之间")
-
-    if not any(char.isdigit() for char in user_password):
-        raise Exception("密码必须包含至少一个数字")
+@require_http_methods(['GET'])
+def sendVerificationCode(request):
+    ''' 发送邮箱验证码 '''
     
-    if not any(char.isalpha() for char in user_password):
-        raise Exception("密码必须包含至少一个字母")
+    response = {
+        'status': 'ERROR',
+        'errorMessage': None,
+        "verificationCode": None
+    }
+    try:
+        user_email = request.GET.get('userEmail')
+        validate_email(user_email)
+        status, verification_code = send_verification_code_code(user_email)
+        if status:
+            response['status'], response['verificationCode'] = 'SUCCESS', verification_code
+            cache.set(f"{user_email}_code", verification_code, 120)
+        else:
+            response['errorMessage'] = "验证码发送失败"
+    except json.JSONDecodeError:
+        response['errorMessage'] = "无效的JSON负载"
+        return JsonResponse(response)
+    except EmailNotValidError as e:
+        response['errorMessage'] = f"邮箱格式错误: {str(e)}"
+        return JsonResponse(response)
+    except Exception as e:
+        response['errorMessage'] = str(e)
+        return JsonResponse(response)
 
-    allowed_pattern = r'^[a-zA-Z0-9_*!]+$'
-    if not re.match(allowed_pattern, user_password):
-        raise Exception("密码只能包含字母、数字和'_'、'*'、'!'特殊字符")
+    return JsonResponse(response)
 
 @require_http_methods(['POST'])
 def register(request):
@@ -47,6 +66,12 @@ def register(request):
         user_email = body.get('userEmail')
         user_name = body.get('userName')
         user_password = str(body.get('password'))
+        verification_code = str(body.get('verificationCode'))
+
+        email_code = cache.get(f"{user_email}_code")
+        if email_code is None or email_code != verification_code:
+            response['errorMessage'] = "验证码错误"
+            return JsonResponse(response)
 
         with transaction.atomic():
             if user_accounts.objects.filter(user_email=user_email).exists():

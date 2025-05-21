@@ -13,9 +13,9 @@ from django.db import transaction
 from django.utils import timezone
 
 from .models import user_accounts, stock_basic, stock_ownership, stock_transactions, stock_market, user_favorite_stocks
-from stock_analyse.functions import get_previous_workday
-from user.validator import token_required
-from .tushare_client import ts, pro
+from utils.tools import tradable, get_previous_workday
+from utils.validator import token_required
+from utils.tushare_client import ts, pro
 
 load_dotenv()
 warnings.filterwarnings("ignore")
@@ -27,22 +27,6 @@ warnings.filterwarnings("ignore")
 @ensure_csrf_cookie
 def getCSRF(request):
     return JsonResponse({"detail": "CSRF cookie set"})
-
-def tradable():
-    # 测试模式不检查是否能够交易
-    if os.getenv("RUN_MODE") == "TEST":
-        return True
-
-    now = timezone.now().time()
-    is_trading_time = ((time(9, 30) <= now <= time(11, 30)) or
-                       (time(13, 0) <= now <= time(15, 0)))
-    
-    if is_trading_time:
-        today = timezone.now().strftime("%Y%m%d")
-        trading = pro.trade_cal(exchange='', start_date=today, end_date=today)['is_open'][0]
-        return bool(trading)
-    else:
-        return False
 
 def updateStockBasic():
     ''' 更新股票列表 '''

@@ -2,6 +2,7 @@ from . import user_views
 from django.urls import path
 
 urlpatterns = [
+    path("sendVerificationCode", user_views.sendVerificationCode, name="send_verification_code"),
     path("register", user_views.register, name='register'),
     path("login", user_views.login, name='user_login'),
     path("gainUserInformation", user_views.gainUserInformation, name='gain_user_information'),

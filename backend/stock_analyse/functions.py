@@ -1,19 +1,13 @@
-from .transformer_forecasts import forecasts_functions
-from platform_functions.tushare_client import ts, pro
-import chinese_calendar as calendar
-from django.utils import timezone
 from bs4 import BeautifulSoup
 import pandas as pd
 import numpy as np
 import datetime
 import requests
 
-# 寻找最近工作日
-def get_previous_workday():
-    previous_day = timezone.now().date() - datetime.timedelta(days=1)
-    while not calendar.is_workday(previous_day):
-        previous_day -= datetime.timedelta(days=1)
-    return previous_day.strftime('%Y%m%d')
+from .transformer_forecasts import forecasts_functions
+from utils.tools import get_previous_workday
+from utils.tushare_client import ts, pro
+from django.utils import timezone
 
 '''
 单位测试阶段先使用Tushare直接获取

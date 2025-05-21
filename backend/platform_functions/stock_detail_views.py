@@ -1,14 +1,16 @@
-from django.views.decorators.http import require_http_methods
-from django.http import JsonResponse
-from . import stock_detail_functions
-from .tushare_client import ts, pro
-from django.core.cache import cache
-from django.db import transaction
-from django.utils import timezone
-from .models import stock_market
 import pandas as pd
 import datetime
 import json
+
+from utils.tushare_client import ts, pro
+from . import stock_detail_functions
+from .models import stock_market
+
+from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
+from django.core.cache import cache
+from django.db import transaction
+from django.utils import timezone
 
 '''
 股票详细页面的显示内容包含

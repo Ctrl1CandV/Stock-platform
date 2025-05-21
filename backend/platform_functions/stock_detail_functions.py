@@ -1,16 +1,15 @@
 from dateutil.relativedelta import relativedelta
 from typing import Tuple, Dict, List
-from .tushare_client import ts, pro
-from django.utils import timezone
 import pandas_ta as ta
 import pandas as pd
 import datetime
+import warnings
 import base64
 import io
 
-import matplotlib
-matplotlib.use('Agg')
-import warnings
+from utils.tushare_client import ts, pro
+from django.utils import timezone
+
 warnings.filterwarnings("ignore")
 
 def financial_metric_form(stock_code: str) -> List[Dict]:

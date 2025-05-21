@@ -49,8 +49,18 @@
             <label for="confirm-password">确认密码</label>
             <input type="password" id="confirm-password" v-model="registerForm.confirmPassword"
               :class="{ 'input-error': passwordMismatch }" required />
-              <span v-if="passwordMismatch" class="error-message">密码不一致</span>
+            <span v-if="passwordMismatch" class="error-message">密码不一致</span>
           </div>
+          <div class="form-group">
+            <label for="verificationCode">邮箱验证码</label>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="verificationCode" v-model="registerForm.verificationCode" required
+                style="flex:1;" />
+            </div>
+          </div>
+          <button type="button" class="btn-secondary" @click="handleSendVerificationCode" :disabled="codeCountdown > 0">
+            {{ codeCountdown > 0 ? codeCountdown + '秒后重试' : '获取验证码' }}
+          </button>
           <button type="submit" class="btn-secondary">注册</button>
         </form>
         <p class="switch-text">已经有账号了？<span class="link" @click="activeTab = 'login'">立即登录</span></p>
@@ -72,10 +82,13 @@ export default {
       },
       registerForm: {
         userEmail: '',
+        verificationCode: '',
         userName: '',
         password: '',
         confirmPassword: '',
-      }
+      },
+      codeCountdown: 0,
+      codeTimer: null
     };
   },
   computed: {
@@ -128,7 +141,8 @@ export default {
         const response = await this.$axios.post('/user/register', {
           userEmail: this.registerForm.userEmail,
           userName: this.registerForm.userName,
-          password: this.registerForm.password
+          password: this.registerForm.password,
+          verificationCode: this.registerForm.verificationCode,
         });
         if (response.data.status === 'SUCCESS') {
           this.$message.success(`用户${this.registerForm.userName}注册成功`);
@@ -142,8 +156,34 @@ export default {
       } catch (error) {
         alert(error.message);
       }
-    }
-  }
+    },
+    async handleSendVerificationCode() {
+      if (!this.registerForm.userEmail) {
+        this.$message.error('请先输入邮箱');
+        return;
+      }
+      try {
+        const response = await this.$axios.get('/user/sendVerificationCode', {
+          params: { userEmail: this.registerForm.userEmail }
+        });
+        if (response.data.status === 'SUCCESS') {
+          this.$message.success('验证码已发送，请查收邮箱');
+          this.codeCountdown = 60;
+          this.codeTimer = setInterval(() => {
+            if (this.codeCountdown > 0) {
+              this.codeCountdown--;
+            } else {
+              clearInterval(this.codeTimer);
+            }
+          }, 1000);
+        } else {
+          this.$message.error('验证码发送失败: ' + (response.data.errorMessage || '未知错误'));
+        }
+      } catch (error) {
+        this.$message.error('验证码发送异常: ' + error.message);
+      }
+    },
+  },
 };
 </script>
 

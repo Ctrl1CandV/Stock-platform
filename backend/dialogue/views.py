@@ -1,7 +1,8 @@
-from django.views.decorators.http import require_http_methods
-from django.http import JsonResponse
 from .models import Agent
 import json
+
+from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
 
 @require_http_methods(['GET'])
 def dialogueLocalModel(request):
