@@ -1,8 +1,17 @@
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
-import os
-import sys
+import requests
+import os, sys
 
+def check_ollama():
+    try:
+        response = requests.get("http://localhost:11434")
+        if response.status_code != 200:
+            raise Exception(f"返回状态码: {response.status_code}")
+    except Exception as e:
+        print(f"Ollama连接失败", end=" ")
+        sys.exit(1)
+    print("Ollama连接成功")
 
 def main():
     """Run administrative tasks."""
@@ -17,6 +26,6 @@ def main():
         ) from exc
     execute_from_command_line(sys.argv)
 
-
 if __name__ == "__main__":
+    check_ollama()
     main()

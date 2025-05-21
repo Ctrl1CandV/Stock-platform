@@ -63,8 +63,6 @@ def updateStockBasic():
 
             # 使用批处理进行数据插入
             stock_basic.objects.bulk_create(new_records)
-
-        print("股票列表更新成功")
     except Exception as e:
         print(f"股票列表更新失败: {str(e)}")
 
@@ -73,7 +71,6 @@ def cleanMarket():
     try:
         with transaction.atomic():
             stock_market.objects.all().delete()
-        print("stock_market表已成功清除")
     except Exception as e:
         print(f"清除stock_market表错误: {str(e)}")
 
