@@ -13,9 +13,9 @@ class Prompt():
 
 class OllamaClient():
     def __init__(self, base_url: str, model_name: str, memorys: List[Prompt]):
-        self.base_url = base_url if base_url else "http://localhost:11434/"
-        self.model_name = model_name if model_name else "qwen3:4b"
-        self.memorys = memorys if memorys else []
+        self.base_url = base_url or "http://localhost:11434/"
+        self.model_name = model_name or "qwen3:4b"
+        self.memorys = memorys or []
     
     def construct_message(self, prompts: List[Prompt]) -> List[Dict[str, str]]:
         message = []

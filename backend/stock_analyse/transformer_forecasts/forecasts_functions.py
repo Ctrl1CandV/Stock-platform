@@ -2,6 +2,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from sklearn.model_selection import train_test_split
 from .Transformer import Transformer
+from utils.logger import Logger
 import pandas_ta as ta
 import pandas as pd
 import numpy as np
@@ -11,6 +12,7 @@ import os
 
 import warnings
 warnings.filterwarnings("ignore")
+logger = Logger()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 learning_rate = 1e-4
@@ -84,7 +86,7 @@ def train(stock_code, data):
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=5)
 
-    print("Initialization is complete.Training begins")
+    logger.info(f"Initialization is complete.Training model{stock_code} begins")
     best_loss = float('inf')
     for epoch in range(epochs):
         # 训练阶段
@@ -125,7 +127,7 @@ def train(stock_code, data):
                 f"{stock_code}_best_model.pth"
             )
             torch.save(model.state_dict(), model_path)
-    print(f'Training complete.The smallest verification loss is:{best_loss}')
+    logger.info(f'Training complete.The smallest verification loss is:{best_loss}')
     return data
 
 def forecast(stock_code, data):
@@ -145,21 +147,3 @@ def forecast(stock_code, data):
 
     prediction = normalizer.inverse_transform(prediction.cpu().numpy())
     return prediction
-
-if __name__ == '__main__':
-    import tushare as ts
-
-    token = '66e72ae286def4e5826d1edc84f45cdad596c34137a91396b335cefd'
-    pro = ts.pro_api(token)
-
-    stock_code = '002558.SZ'
-    end_date = datetime.date.today()
-    start_date = end_date - datetime.timedelta(days=500)
-    start_date, end_date = start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')
-    data = pro.daily(ts_code=stock_code, start_date=start_date, end_date=end_date)
-    if data is None:
-        print("No Data")
-    else:
-        forecast_data = train(stock_code, data)
-        prediction = forecast(stock_code, forecast_data)
-        print(f"The next price of close is {prediction[0, 0]}")

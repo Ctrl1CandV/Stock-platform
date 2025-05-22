@@ -1,14 +1,16 @@
-from django.views.decorators.http import require_http_methods
-from platform_functions.models import stock_market
 from decimal import Decimal, getcontext
-from django.http import JsonResponse
-from django.core.cache import cache
-from django.utils import timezone
-from . import functions
 import pandas as pd
 import numpy as np
 import datetime
 import json
+
+from platform_functions.models import stock_market
+from . import functions
+
+from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
+from django.core.cache import cache
+from django.utils import timezone
 
 @require_http_methods(['GET'])
 def forecastStock(request):

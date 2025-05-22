@@ -7,8 +7,8 @@ import warnings
 import base64
 import io
 
-from utils.tushare_client import ts, pro
 from django.utils import timezone
+from utils.tools import ts, pro
 
 warnings.filterwarnings("ignore")
 

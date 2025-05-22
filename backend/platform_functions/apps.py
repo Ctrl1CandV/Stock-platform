@@ -1,11 +1,11 @@
 from django.core.cache import cache
 from django.apps import AppConfig
-import shutil
-import sys
-import os
+from utils.logger import Logger
+import os, sys, shutil
 
 from dotenv import load_dotenv
 load_dotenv()
+logger = Logger()
 
 '''
 由于Django项目启动重复加载的问题
@@ -15,8 +15,7 @@ def check_redis():
     try:
         cache.set('redis_status', 1, 1)
     except Exception as e:
-        print("Redis连接失败", end=" ")
-        sys.exit(1)
+       logger.error("Redis连接失败")
     print("Redis连接成功")
 
 def cleanModelData():

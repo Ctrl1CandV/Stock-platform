@@ -5,8 +5,7 @@ import datetime
 import requests
 
 from .transformer_forecasts import forecasts_functions
-from utils.tools import get_previous_workday
-from utils.tushare_client import ts, pro
+from utils.tools import get_previous_workday, ts, pro
 from django.utils import timezone
 
 '''

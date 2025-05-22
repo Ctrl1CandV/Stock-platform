@@ -3,9 +3,8 @@ import os, json, requests
 import jwt, time
 
 from .models import user_accounts, stock_ownership, stock_transactions, user_favorite_stocks, stock_basic
-from utils.tools import validatePasswordComplexity, send_verification_code_code
+from utils.tools import validatePasswordComplexity, send_verification_code_code, ts, pro
 from utils.validator import token_required
-from utils.tushare_client import ts, pro
 
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse, StreamingHttpResponse

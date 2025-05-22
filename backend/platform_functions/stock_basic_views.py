@@ -13,9 +13,8 @@ from django.db import transaction
 from django.utils import timezone
 
 from .models import user_accounts, stock_basic, stock_ownership, stock_transactions, stock_market, user_favorite_stocks
-from utils.tools import tradable, get_previous_workday
+from utils.tools import tradable, get_previous_workday, ts, pro
 from utils.validator import token_required
-from utils.tushare_client import ts, pro
 
 load_dotenv()
 warnings.filterwarnings("ignore")

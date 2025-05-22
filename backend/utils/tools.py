@@ -1,12 +1,20 @@
 import chinese_calendar as calendar
+from dotenv import load_dotenv
 import datetime, time
 import random, string
+import tushare as ts
 import re, os
 
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
-from .tushare_client import pro
+
+load_dotenv()
+TUSHARE_TOKEN = os.getenv('TUSHARE_TOKEN')
+if not TUSHARE_TOKEN:
+    raise ValueError("TUSHARE_TOKEN not found in environment variables.")
+ts.set_token(TUSHARE_TOKEN)
+pro = ts.pro_api(TUSHARE_TOKEN)
 
 def validatePasswordComplexity(user_password: str):
     if len(user_password) < 8 or len(user_password) > 15:
@@ -28,8 +36,8 @@ def tradable():
         return True
 
     now = timezone.now().time()
-    is_trading_time = ((time(9, 30) <= now <= time(11, 30)) or
-                       (time(13, 0) <= now <= time(15, 0)))
+    is_trading_time = ((datetime.time(9, 30) <= now <= datetime.time(11, 30)) or
+                        (datetime.time(13, 0) <= now <= datetime.time(15, 0)))
     
     if is_trading_time:
         today = timezone.now().strftime("%Y%m%d")

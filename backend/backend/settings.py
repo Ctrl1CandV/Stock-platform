@@ -9,15 +9,11 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
-from pathlib import Path
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-import os
 from dotenv import load_dotenv
+from pathlib import Path
+import os
 
+BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv()
 
 # Quick-start development settings - unsuitable for production
@@ -42,6 +38,7 @@ INSTALLED_APPS = [
     "platform_functions",
     "stock_analyse",
     "user",
+    "dialogue",
 ]
 
 MIDDLEWARE = [
@@ -54,27 +51,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', os.getenv('BACKEND_IP')]
-CORS_ORIGIN_ALLOW_ALL = False
-CORS_ORIGIN_WHITELIST = [
-    f'http://{os.getenv("BACKEND_IP")}:8080'
-]
-CORS_ALLOW_CREDENTIALS = True
-
-CSRF_TRUSTED_ORIGINS = [
-    f'http://{os.getenv("BACKEND_IP")}:8080'
-]
-
-EMAIL_HOST = "smtp.qq.com"
-EMAIL_PORT = 25
-EMAIL_HOST_USER = "1148781323@qq.com"
-EMAIL_HOST_PASSWORD = "kyiuiocknnqmjccj"
-EMAIL_USE_TLS = True
-EMAIL_FROM = "1148781323@qq.com"
-EMAIL_TITLE = '邮箱验证码'
-
-ROOT_URLCONF = "backend.urls"
 
 TEMPLATES = [
     {
@@ -95,9 +71,69 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "backend.wsgi.application"
 
+# 日志配置
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {asctime} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/platform.log'),
+            'maxBytes': 1024 * 1024 * 15,
+            'backupCount': 10,
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'app': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', os.getenv('BACKEND_IP')]
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_WHITELIST = [
+    f'http://{os.getenv("BACKEND_IP")}:8080'
+]
+CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = [
+    f'http://{os.getenv("BACKEND_IP")}:8080'
+]
+
+EMAIL_HOST = "smtp.qq.com"
+EMAIL_PORT = 25
+EMAIL_HOST_USER = "1148781323@qq.com"
+EMAIL_HOST_PASSWORD = "kyiuiocknnqmjccj"
+EMAIL_USE_TLS = True
+EMAIL_FROM = "1148781323@qq.com"
+EMAIL_TITLE = '邮箱验证码'
+
+ROOT_URLCONF = "backend.urls"
 
 CACHES = {
     "default": {
@@ -108,7 +144,6 @@ CACHES = {
         }
     }
 }
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
@@ -144,18 +179,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "Asia/Shanghai"
-
 USE_I18N = True
-
 USE_TZ = False
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
-STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

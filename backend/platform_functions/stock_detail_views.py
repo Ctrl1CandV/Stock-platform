@@ -2,8 +2,8 @@ import pandas as pd
 import datetime
 import json
 
-from utils.tushare_client import ts, pro
 from . import stock_detail_functions
+from utils.tools import ts, pro
 from .models import stock_market
 
 from django.views.decorators.http import require_http_methods
