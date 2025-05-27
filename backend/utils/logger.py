@@ -30,3 +30,5 @@ def ensure_log_directory():
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 ensure_log_directory()
+
+logger = Logger()

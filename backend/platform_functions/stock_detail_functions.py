@@ -27,20 +27,20 @@ def financial_metric_form(stock_code: str) -> List[Dict]:
     merged_data = pd.merge(indicator_data, income_data, on='ann_date', how='inner')
     return merged_data.to_dict(orient='records')
 
-def get_stock_data(stock_code: str, time_span: int, type: int) -> Tuple[List[Dict], str]:
+def get_stock_data(stock_code: str, time_span: int, time_type: int) -> Tuple[List[Dict], str]:
     """
     获取股票数据但不生成图表，直接返回处理后的数据
     """
     end_date = timezone.now().date()
-    if type == 1:
+    if time_type == 1:
         start_date = end_date - datetime.timedelta(days=time_span)
         data = pro.daily(ts_code=stock_code, start_date=start_date.strftime('%Y%m%d'), end_date=end_date.strftime('%Y%m%d'))
         title = f"{stock_code} Daily candlestick chart"
-    elif type == 2:
+    elif time_type == 2:
         start_date = end_date - datetime.timedelta(days=7 * time_span)
         data = pro.weekly(ts_code=stock_code, start_date=start_date.strftime('%Y%m%d'), end_date=end_date.strftime('%Y%m%d'))
         title = f"{stock_code} Weekly candlestick chart"
-    elif type == 3:
+    elif time_type == 3:
         start_date = end_date - relativedelta(months=time_span)
         data = pro.monthly(ts_code=stock_code, start_date=start_date.strftime('%Y%m%d'), end_date=end_date.strftime('%Y%m%d'))
         title = f"{stock_code} Monthly candlestick chart"

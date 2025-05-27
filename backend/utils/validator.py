@@ -5,7 +5,7 @@ import jwt
 from django.http import JsonResponse
 from django.core.cache import cache
 from django.conf import settings
-from .logger import Logger
+from .logger import logger
 
 # 用户的Token校验装饰器
 def token_required(view_func):
@@ -15,7 +15,6 @@ def token_required(view_func):
             'status': 'ERROR',
             'errorMessage': None
         }
-        logger = Logger()
         try:
             # 从请求头中获取Token
             token = request.META.get('HTTP_AUTHORIZATION').split(' ')

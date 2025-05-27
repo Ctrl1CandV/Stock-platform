@@ -553,6 +553,7 @@ export default {
             }
           }, 300);
         } else {
+          console.log(response.data);
           this.$message.error('K线图数据获取失败: ' + response.data.errorMessage);
         }
       } catch (error) {

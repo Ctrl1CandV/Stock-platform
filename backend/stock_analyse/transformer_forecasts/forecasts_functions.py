@@ -2,7 +2,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from sklearn.model_selection import train_test_split
 from .Transformer import Transformer
-from utils.logger import Logger
+from utils.logger import logger
 import pandas_ta as ta
 import pandas as pd
 import numpy as np
@@ -12,7 +12,6 @@ import os
 
 import warnings
 warnings.filterwarnings("ignore")
-logger = Logger()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 learning_rate = 1e-4

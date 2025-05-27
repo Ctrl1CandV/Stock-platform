@@ -2,8 +2,10 @@ import pandas as pd
 import datetime
 import json
 
+from utils.response_view import api_view, APIResponse
 from . import stock_detail_functions
 from utils.tools import ts, pro
+from utils.logger import logger
 from .models import stock_market
 
 from django.views.decorators.http import require_http_methods
@@ -16,18 +18,11 @@ from django.utils import timezone
 股票详细页面的显示内容包含
 股票行情图、技术指标图、市盈率市净率变化图和公司财务数据
 '''
-@require_http_methods(['POST'])
-def updateAnnualDailyQuotes(request):
+@api_view(methods=['GET'], require_token=False)
+def updateAnnualDailyQuotes(request, params):
     ''' 获取年度日线行情并保存本地，用于模型训练和夏普比例的计算 '''
-
-    response = {
-        'status': 'ERROR',
-        'errorMessage': None,
-    }
+    stock_code = params.get('stockCode')
     try:
-        body = json.loads(request.body.decode('utf-8'))
-        stock_code = body.get('stockCode')
-
         end_date = timezone.now().date()
         start_date = end_date - datetime.timedelta(days=500)
         start_date, end_date = start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')
@@ -54,54 +49,31 @@ def updateAnnualDailyQuotes(request):
             ]
 
             stock_market.objects.bulk_create(new_market_records)
-
-        response['status'] = "SUCCESS"
-        print(f"{stock_code}的年度日线行情已保存本地")
-    except json.JSONDecodeError:
-        response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response)
+        logger.info(f"{stock_code}的年度日线行情已保存本地")
+        return APIResponse(status="SUCCESS").to_json()
     except Exception as e:
-        print(f"股票年度日线行情更新失败: {str(e)}")
+        logger.error(f"股票年度日线行情更新失败: {str(e)}")
+        return APIResponse(error_message=f"股票年度日线行情更新失败: {str(e)}").to_json()
 
-    return JsonResponse(response)
-
-@require_http_methods(['GET'])
-def showStockQurve(request):
+@api_view(methods=['GET'], use_cache=True, cache_timeout=60 * 60 * 24, require_token=False)
+def showStockQurve(request, params):
     ''' 显示日、周和月的行情数据 '''
+    stock_code = params.get('stockCode')
+    time_span, time_type = params.get('timeSpan'), params.get('type')
 
-    response = {
-        'status': 'ERROR',
-        'errorMessage': None,
-        'data': None,
-        'title': None
-    }
+    if not all([stock_code, time_span, time_type]):
+        return APIResponse(error_message="缺少必要的参数").to_json()
+
     try:
-        stock_code = request.GET.get('stockCode')
-        time_span = int(request.GET.get('timeSpan'))
-        type = int(request.GET.get('type'))
-        if time_span <= 0 or time_span >= 3000:
-            response['errorMessage'] = "无效的时间跨度"
-            return JsonResponse(response)
+        time_span, time_type = int(time_span), int(time_type)
+    except ValueError:
+        return APIResponse(error_message="参数格式错误").to_json()
 
-        cache_key = f'{stock_code}_{time_span}_{type}_stockQurveData'
-        cache_result = cache.get(cache_key)
-        if cache_result:
-            response['data'], response['title'] = cache_result['data'], cache_result['title']
-        else:
-            # type用int表示，1对应日线，2对应周线，3对应月线
-            data, title = stock_detail_functions.get_stock_data(stock_code, time_span, type)
-            response['data'], response['title'] = data, title
-            cache.set(cache_key, {'data': data, 'title': title}, 60 * 60 * 24)
-        response['status'] = 'SUCCESS'
-
-    except json.JSONDecodeError:
-        response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response)
-    except Exception as e:
-        response['errorMessage'] = str(e)
-        return JsonResponse(response)
-
-    return JsonResponse(response)
+    if time_span <= 0 or time_span >= 3000:
+        return APIResponse("无效的时间跨度").to_json()
+    
+    data, title = stock_detail_functions.get_stock_data(stock_code, time_span, time_type)
+    return APIResponse(status="SUCCESS", data=data, title=title).to_json()
 
 @require_http_methods(['GET'])
 def showTechnicalIndicator(request):
