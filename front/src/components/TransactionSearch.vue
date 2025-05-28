@@ -226,6 +226,7 @@ export default {
 
         if (response.data.status === 'SUCCESS') {
           this.transactionList = response.data.stockTransactionList;
+          console.log(this.transactionList);
           this.filteredTransactions = this.transactionList; // 初始显示全部数据
         } else {
           this.$message.error('获取交易记录失败: ' + response.data.errorMessage);

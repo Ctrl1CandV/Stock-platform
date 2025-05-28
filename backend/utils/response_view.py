@@ -8,12 +8,18 @@ from django.core.cache import cache
 from django.conf import settings
 from .logger import logger
 
+class APIException(Exception):
+    def __init__(self, message: str = "未知错误", code: int = 400):
+        self.message = message
+        self.code = code
+        super().__init__(self.message)
+
 class APIResponse:
     """ 统一的API响应类 """
     def __init__(self, status: str = 'ERROR', error_message: str = None, **kwargs):
         self.data = {
             'status': status,
-            'errorMessgae': error_message,
+            'errorMessage': error_message,
             **kwargs
         }
     
@@ -36,21 +42,20 @@ class RequestHandler:
 
 class CacheManager():
     """ 缓存管理器 """
-    @staticmethod
-    def cache_proxy(cache_key: str, function: Callable, timeout: int) -> JsonResponse:
-        cache_result = cache.get(cache_key)
+    def __init__(self, cache_key: str = None, timeout: int = None):
+        self.cache_key = cache_key
+        self.timeout = timeout
+
+    def get_or_set(self, callback: Callable, cache_key: str = None) -> Any:
+        if cache_key:
+            self.cache_key = cache_key
+        cache_result = cache.get(self.cache_key)
         if cache_result is not None:
             return cache_result
-        response = function()
-        if hasattr(response, 'content'):
-            data = json.loads(response.content)
-            if data.get('status') == "SUCCESS":
-                cache_data = {
-                    key: value for key, value in data.items()
-                    if key not in ('status', 'errorMessage')
-                }
-                cache.set(cache_key, cache_data, timeout)
-        return response
+        
+        result = callback()
+        cache.set(self.cache_key, result, self.timeout)
+        return result
 
 class TokenValidator:
     """ Token校验器 """
@@ -93,9 +98,8 @@ def api_view(methods: List[str], use_cache: bool = False, cache_timeout: int = 6
 
                 if use_cache:
                     cache_key = func.__name__ + '_' + '_'.join([str(value) for value in params.values()])
-                    def view_function():
-                        return func(request, params, *args, **kwargs)
-                    result = CacheManager.cache_proxy(cache_key, view_function, cache_timeout)
+                    cache_manager = CacheManager(cache_key, cache_timeout)
+                    result = func(request, params, cache_manager, *args, **kwargs)
                 else:
                     result = func(request, params, *args, **kwargs)
 
@@ -107,12 +111,10 @@ def api_view(methods: List[str], use_cache: bool = False, cache_timeout: int = 6
                     return result
                 else:
                     return APIResponse(error_message="无效的响应类型").to_json()
-            except ValueError as e:
-                return APIResponse(error_message=str(e)).to_json()
             except json.JSONDecodeError:
                 return APIResponse(error_message="无效的JSON负载").to_json()
             except Exception as e:
-                return APIResponse(error_message=str(e)).to_json()
+                return APIResponse(error_message=e.__class__.__name__ + ": " + str(e)).to_json()
         
         return wrapper
     return decorator

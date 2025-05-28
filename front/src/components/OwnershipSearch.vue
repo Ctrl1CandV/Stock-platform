@@ -116,7 +116,7 @@ export default {
           localStorage.setItem('stockCode', ownership.stock_code);
           localStorage.setItem('stockName', ownership.stock_name);
         } else {
-          alert('跳转失败: ' + response.data.errorMessage);
+          this.$message.error('跳转失败: ' + response.data.errorMessage);
         }
       } catch (error) {
         alert('请求失败: ' + error.message);
@@ -144,7 +144,7 @@ export default {
             this.initHoldTimeChart();
           });
         } else {
-          alert('获取数据失败:' + response.data.errorMessage);
+          this.$message.error('获取数据失败:' + response.data.errorMessage);
         }
       } catch (error) {
         alert('请求失败: ' + error.message);

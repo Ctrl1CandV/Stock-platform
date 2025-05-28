@@ -14,7 +14,7 @@ from django.utils import timezone
 
 from .models import user_accounts, stock_basic, stock_ownership, stock_transactions, stock_market, user_favorite_stocks
 from utils.tools import tradable, get_previous_workday, ts, pro
-from utils.validator import token_required
+from utils.response_view import api_view, APIException
 
 load_dotenv()
 warnings.filterwarnings("ignore")
@@ -73,340 +73,191 @@ def cleanMarket():
     except Exception as e:
         print(f"清除stock_market表错误: {str(e)}")
 
-@require_http_methods(['GET'])
-def isTrading(request):
+@api_view(methods=['GET'], require_token=False)
+def isTrading(request, params):
     ''' 判断当前是否可以交易 '''
-
-    response = {
-        'status': 'ERROR',
-        'errorMessage': None,
-        'perPrice': 0
-    }
-    try:
-        if tradable():
-            # 仅当可交易时，返回最新的每股价格
-            stock_code = request.GET.get('stockCode')
-            quote = ts.realtime_quote(ts_code=stock_code)
-            response['status'], response['perPrice'] = 'SUCCESS', round(quote['PRICE'][0], 2)
-        else:
-            response['errorMessage'] = "当前时间不可交易"
-
-    except json.JSONDecodeError:
-        response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response)
-    except Exception as e:
-        response['errorMessage'] = str(e)
-        return JsonResponse(response)
-
-    return JsonResponse(response)
+    if tradable():
+        # 仅当可交易时，返回最新的每股价格
+        stock_code = params.get('stockCode')
+        quote = ts.realtime_quote(ts_code=stock_code)
+        return { 'perPrice': round(quote['PRICE'][0], 2) }
+    else:
+        raise APIException("当前时间不允许交易")
 
 # 模糊查询
-@require_http_methods(['GET'])
-def queryStockByName(request):
+@api_view(methods=['GET'], require_token=False)
+def queryStockByName(request, params):
     ''' 根据股票名称查询 '''
+    search_name = params.get('stockName')
+    stock_basics = stock_basic.objects.filter(stock_name__contains=search_name)
+    if not stock_basics.exists():
+        raise APIException("查询结果为空")
 
-    response = {
-        'status': 'ERROR',
-        'errorMessage': None,
-        'stockInformationList': None
-    }
-    try:
-        search_name = request.GET.get('stockName')
-        stock_basics = stock_basic.objects.filter(stock_name__contains=search_name)
-        if not stock_basics.exists():
-            response['errorMessage'] = "查询结果为空"
-            return JsonResponse(response)
+    stock_information_list = []
+    for stock in stock_basics:
+        stock_information_map = {
+            'stockCode': stock.stock_code,
+            'stockName': stock.stock_name,
+            'industry': stock.industry,
+            'area': stock.area,
+            'listDate': stock.list_date
+        }
+        stock_information_list.append(stock_information_map)
 
-        stock_information_list = []
-        for stock in stock_basics:
-            stock_information_map = {
-                'stockCode': stock.stock_code,
-                'stockName': stock.stock_name,
-                'industry': stock.industry,
-                'area': stock.area,
-                'listDate': stock.list_date
-            }
-            stock_information_list.append(stock_information_map)
-
-        response['status'], response['stockInformationList'] = 'SUCCESS', stock_information_list
-
-    except json.JSONDecodeError:
-        response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response)
-    except Exception as e:
-        response['errorMessage'] = str(e)
-        return JsonResponse(response)
-
-    return JsonResponse(response)
+    return { 'stockInformationList': stock_information_list }
 
 # 精确搜索
-@require_http_methods(['GET'])
-def queryStockByCode(request):
+@api_view(methods=['GET'], require_token=False)
+def queryStockByCode(request, params):
     ''' 根据股票代码查询 '''
-
-    response = {
-        'status': 'ERROR',
-        'errorMessage': None,
-        'stockInformation': None
-    }
+    search_code = params.get('stockCode')
     try:
-        search_code = request.GET.get('stockCode')
         if search_code[-1].isalpha() and '.' in search_code:
             stock = stock_basic.objects.get(stock_code=search_code)
         else:
             stock = stock_basic.objects.get(stock_code__startswith=search_code)
-
-        stock_information = {
-                'stockCode': stock.stock_code,
-                'stockName': stock.stock_name,
-                'industry': stock.industry,
-                'area': stock.area,
-                'listDate': stock.list_date
-            }
-        response['status'], response['stockInformation'] = 'SUCCESS', [stock_information]
-
-    except json.JSONDecodeError:
-        response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response)
     except ObjectDoesNotExist:
-        response['errorMessage'] = "该股票代码不存在"
-        return JsonResponse(response)
-    except Exception as e:
-        response['errorMessage'] = str(e)
-        return JsonResponse(response)
+        raise APIException("该股票记录不存在")
 
-    return JsonResponse(response)
+    stock_information = {
+        'stockCode': stock.stock_code,
+        'stockName': stock.stock_name,
+        'industry': stock.industry,
+        'area': stock.area,
+        'listDate': stock.list_date
+    }
+    return { 'stockInformation': stock_information} 
 
-@require_http_methods(['POST'])
-@token_required
-def buyStock(request):
+@api_view(methods=['POST'])
+def buyStock(request, params):
     ''' 买入股票 '''
+    user_id, stock_code, buy_number = params.get('userID'), params.get('stockCode'), params.get('buyNumber')
+    # 购买数量区间判断
+    if buy_number < 0 or buy_number > 10000:
+        raise APIException("购买数量超出可交易区间")
 
-    response = {
-        'status': 'ERROR',
-        'errorMessage': None,
-        'userID': None,
-        'amountSpent': None
-    }
-    try:
-        body = json.loads(request.body.decode('utf-8'))
-        user_id = body.get('userID')
-        stock_code = body.get('stockCode')
-        buy_number = body.get('buyNumber')
+    quote = ts.realtime_quote(ts_code=stock_code)
+    if quote.empty or 'PRICE' not in quote:
+        raise APIException("无法获取股票实时价格")
 
-        # 交易时间判断
-        if not tradable():
-            response['errorMessage'] = "当前时间不允许交易"
-            return JsonResponse(response)
+    # 余额判断
+    per_price = round(quote['PRICE'][0], 2)
+    total_amount = per_price * buy_number
+    user = user_accounts.objects.get(user_id=user_id)
+    if user.user_balance < total_amount:
+        raise APIException("用户余额不足")
 
-        # 购买数量区间判断
-        if buy_number < 0 or buy_number > 10000:
-            response['errorMessage'] = "购买数量超出可交易区间"
-            return JsonResponse(response)
+    with (transaction.atomic()):
+        stock_information = stock_basic.objects.get(stock_code=stock_code)
 
-        # 余额判断
-        quote = ts.realtime_quote(ts_code=stock_code)
-        if quote.empty or 'PRICE' not in quote:
-            response['errorMessage'] = "无法获取股票实时价格"
-            return JsonResponse(response)
+        # 创造交易记录
+        stock_transactions.objects.create(
+            transaction_type=0,
+            user_id=user,
+            stock_code=stock_code,
+            stock_name=stock_information.stock_name,
+            transaction_number=buy_number,
+            per_price=per_price,
+            gains=0
+        )
 
-        per_price = round(quote['PRICE'][0], 2)
-        total_amount = per_price * buy_number
-        user = user_accounts.objects.get(user_id=user_id)
-        if user.user_balance < total_amount:
-            response['errorMessage'] = "用户余额不足"
-            return JsonResponse(response)
-
-        with (transaction.atomic()):
-            stock_information = stock_basic.objects.get(stock_code=stock_code)
-
-            # 创造交易记录
-            stock_transactions.objects.create(
-                transaction_type=0,
-                user_id=user,
-                stock_code=stock_code,
-                stock_name=stock_information.stock_name,
-                transaction_number=buy_number,
-                per_price=per_price,
-                gains=0
-            )
-
-            '''
-            对已经持有的股票，在持有基础上进行叠加，单价采用加权和形式
-            对未持有的股票，直接创建一个持有股记录即可
-            '''
-            user_ownership, created = stock_ownership.objects.get_or_create(
-                user_id=user,
-                stock_code=stock_code,
-                defaults={
-                    'stock_name': stock_information.stock_name,
-                    'hold_number': buy_number,
-                    'purchase_per_price': per_price
-                }
-            )
-            if not created:
-                user_ownership.purchase_per_price = (user_ownership.purchase_per_price * user_ownership.hold_number + total_amount) / (user_ownership.hold_number + buy_number)
-                user_ownership.hold_number += buy_number
-                user_ownership.save()
-
-            # 余额扣除
-            user.user_balance -= total_amount
-            user.save()
-
-            response['status'], response['userID'], response['amountSpent'] = "SUCCESS", user.user_id, round(float(total_amount), 2)
-
-    except json.JSONDecodeError:
-        response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response)
-    except ObjectDoesNotExist:
-        response['errorMessage'] = "该股票记录不存在"
-        return JsonResponse(response)
-    except Exception as e:
-        response['errorMessage'] = str(e)
-        return JsonResponse(response)
-
-    return JsonResponse(response)
-
-@require_http_methods(['POST'])
-@token_required
-def sellStock(request):
-    ''' 卖出持有股 '''
-
-    response = {
-        'status': 'ERROR',
-        'errorMessage': None,
-        'userID': None,
-        'gain': 0
-    }
-    try:
-        body = json.loads(request.body.decode('utf-8'))
-        ownership_id = body.get('ownershipID')
-        sell_number = body.get('sellNumber')
-        user_ownership = stock_ownership.objects.get(ownership_id=ownership_id)
-
-        # 交易时间判断
-        if not tradable():
-            response['errorMessage'] = "当前时间不允许交易"
-            return JsonResponse(response)
-
-        if sell_number > user_ownership.hold_number:
-            response['errorMessage'] = "超出持有股的数量区间"
-            return JsonResponse(response)
-
-        with transaction.atomic():
-            user = user_ownership.user_id
-            quote = ts.realtime_quote(ts_code=user_ownership.stock_code)
-            new_per_price = quote['PRICE'][0]
-
-            gain = (new_per_price - user_ownership.purchase_per_price) * sell_number
-            # 创建交易记录
-            stock_transactions.objects.create(
-                transaction_type=1,
-                user_id=user,
-                stock_code=user_ownership.stock_code,
-                stock_name=user_ownership.stock_name,
-                transaction_number=sell_number,
-                per_price=new_per_price,
-                gains=gain
-            )
-
-            # 更改持有股记录和用户余额
-            user_ownership.hold_number -= sell_number
+        '''
+        对已经持有的股票，在持有基础上进行叠加，单价采用加权和形式
+        对未持有的股票，直接创建一个持有股记录即可
+        '''
+        user_ownership, created = stock_ownership.objects.get_or_create(
+            user_id=user,
+            stock_code=stock_code,
+            defaults={
+                'stock_name': stock_information.stock_name,
+                'hold_number': buy_number,
+                'purchase_per_price': per_price
+            }
+        )
+        if not created:
+            user_ownership.purchase_per_price = (user_ownership.purchase_per_price * user_ownership.hold_number + total_amount) / (user_ownership.hold_number + buy_number)
+            user_ownership.hold_number += buy_number
             user_ownership.save()
-            if user_ownership.hold_number == 0:
-                user_ownership.delete()
-            user.user_balance += new_per_price * sell_number
-            user.save()
-            response['status'], response['userID'], response['gain'] = "SUCCESS", user.user_id, round(float(gain), 2)
 
-    except json.JSONDecodeError:
-        response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response)
-    except ObjectDoesNotExist:
-        response['errorMessage'] = "该持有股记录不存在"
-        return JsonResponse(response)
-    except Exception as e:
-        response['errorMessage'] = str(e)
-        return JsonResponse(response)
+        # 余额扣除
+        user.user_balance -= total_amount
+        user.save()
 
-    return JsonResponse(response)
+    return { 'userID': user.user_id, 'amountSpent': round(float(total_amount), 2) }
 
-@require_http_methods(['POST'])
-@token_required
-def addFavoriteStock(request):
+@api_view(methods=['POST'])
+def sellStock(request, params):
+    ''' 卖出持有股 '''
+    ownership_id, sell_number = params.get('ownershipID'), params.get('sellNumber')
+    user_ownership = stock_ownership.objects.get(ownership_id=ownership_id)
+    if sell_number > user_ownership.hold_number:
+        raise APIException("超出持有股的数量区间")
+
+    with transaction.atomic():
+        user = user_ownership.user_id
+        quote = ts.realtime_quote(ts_code=user_ownership.stock_code)
+        new_per_price = quote['PRICE'][0]
+
+        gain = (new_per_price - user_ownership.purchase_per_price) * sell_number
+        # 创建交易记录
+        stock_transactions.objects.create(
+            transaction_type=1,
+            user_id=user,
+            stock_code=user_ownership.stock_code,
+            stock_name=user_ownership.stock_name,
+            transaction_number=sell_number,
+            per_price=new_per_price,
+            gains=gain
+        )
+
+        # 更改持有股记录和用户余额
+        user_ownership.hold_number -= sell_number
+        user_ownership.save()
+        if user_ownership.hold_number == 0:
+            user_ownership.delete()
+        user.user_balance += new_per_price * sell_number
+        user.save()
+    
+    return { 'userID': user.user_id, 'gain': round(float(gain), 2) }
+
+@api_view(methods=['POST'])
+def addFavoriteStock(request, params):
     ''' 添加持有股 '''
+    user_id, stock_code = params.get('userID'), params.get('stockCode')
+    user_account = user_accounts.objects.get(user_id=user_id)
 
-    response = {
-        'status': 'ERROR',
-        'errorMessage': None,
-    }
-    try:
-        body = json.loads(request.body.decode('utf-8'))
-        user_id = body.get('userID')
-        stock_code = body.get('stockCode')
-        user_account = user_accounts.objects.get(user_id=user_id)
-
-        # 进行数量和唯一性判断
-        favorite_stocks = user_favorite_stocks.objects.filter(user_id=user_account)
-        if favorite_stocks.exists():
-            if favorite_stocks.count() > 50:
-                response['errorMessage'] = "自选股数量已达上限"
-                return JsonResponse(response)
+    # 进行数量和唯一性判断
+    favorite_stocks = user_favorite_stocks.objects.filter(user_id=user_account)
+    if favorite_stocks.exists():
+        if favorite_stocks.count() > 50:
+            raise APIException("自选股数量已达上限")
             
-            if favorite_stocks.filter(stock_code=stock_code).exists():
-                response['errorMessage'] = "该股票已在自选股中"
-                return JsonResponse(response)
+        if favorite_stocks.filter(stock_code=stock_code).exists():
+            raise APIException("该股票已在自选股中")
         
-        with transaction.atomic():
-            user_favorite_stocks.objects.create(
-                user_id=user_account,
-                stock_code=stock_code
-            )
-
-        response['status'] = 'SUCCESS'
-    except json.JSONDecodeError:
-        response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response)
-    except Exception as e:
-        response['errorMessage'] = str(e)
-        return JsonResponse(response)
-
-    return JsonResponse(response)
-
-@require_http_methods(['POST'])
-@token_required
-def removeFavoriteStock(request):
-    ''' 删除持有股 '''
-
-    response = {
-       'status': 'ERROR',
-       'errorMessage': None,
-    }
-    try:
-        body = json.loads(request.body.decode('utf-8'))
-        user_id = body.get('userID')
-        stock_code = body.get('stockCode')
-        user_account = user_accounts.objects.get(user_id=user_id)
-        
-        removeStock = user_favorite_stocks.objects.filter(
+    with transaction.atomic():
+        user_favorite_stocks.objects.create(
             user_id=user_account,
             stock_code=stock_code
         )
-        if removeStock.exists():
-            with transaction.atomic():
-                removeStock.delete()
-            response['status'] = 'SUCCESS'
-        else:
-            response['errorMessage'] = "该股票不在自选股中"
+    return {}
 
-    except json.JSONDecodeError:
-        response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response)
-    except Exception as e:
-        response['errorMessage'] = str(e)
-        return JsonResponse(response)
-
-    return JsonResponse(response)
+@api_view(methods=['POST'])
+def removeFavoriteStock(request, params):
+    ''' 删除持有股 '''
+    user_id, stock_code = params.get('userID'), params.get('stockCode')
+    user_account = user_accounts.objects.get(user_id=user_id)
+        
+    removeStock = user_favorite_stocks.objects.filter(
+        user_id=user_account,
+        stock_code=stock_code
+    )
+    if removeStock.exists():
+        with transaction.atomic():
+            removeStock.delete()
+        return {}
+    else:
+        raise APIException("该股票不在自选股中")
 
 @require_http_methods(['GET'])
 def loadHomePageData(request):

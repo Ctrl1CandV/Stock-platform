@@ -1,145 +1,67 @@
 from .models import user_accounts, manager
 import json
 
-from django.views.decorators.http import require_http_methods
+from utils.response_view import api_view, APIException
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import JsonResponse
 from django.db import transaction
-
 '''
 管理员仅有三个针对用户的基础功能
 POST会改变数据，GET不会
 '''
-@require_http_methods(['POST'])
-def login(request):
+@api_view(methods=['POST'], require_token=False)
+def login(request, params):
     ''' 管理员登录 '''
-
-    response = {
-        'status': 'ERROR',
-        'managerID': None,
-        'errorMessage': None
-    }
+    manager_name, manager_password = params.get('userAccount'), params.get('password')
     try:
-        body = json.loads(request.body.decode('utf-8'))
-        manager_name = body.get('userAccount')
-        manager_password = body.get('password')
-
         Manager = manager.objects.get(manager_name=manager_name)
-        if manager_password == Manager.manager_password:
-            response['status'], response['managerID'] = 'SUCCESS', Manager.manager_id
-        else:
-            response['errorMessage'] = "密码错误"
-            return JsonResponse(response)
-
-    except json.JSONDecodeError:
-        response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response)
     except ObjectDoesNotExist:
-        response['errorMessage'] = "管理员不存在"
-        return JsonResponse(response)
-    except Exception as e:
-        response['errorMessage'] = str(e)
-        return JsonResponse(response)
+        raise APIException("管理员不存在")
+    if manager_password == Manager.manager_password:
+        return { 'managerID': Manager.manager_id }
+    else:
+        raise APIException("密码错误")
 
-    return JsonResponse(response)
-
-@require_http_methods(['POST'])
-def deleteUser(request):
+@api_view(methods=['POST'], require_token=False)
+def deleteUser(request, params):
     ''' 伪删除用户账户 '''
+    user_id = params.get('userID')
+    with transaction.atomic():
+        user = user_accounts.objects.get(user_id=user_id)
+        user.status = False
+        user.save()
+    return { 'userID': user_id }
 
-    response = {
-        'status': 'ERROR',
-        'userID': None,
-        'errorMessage': None
-    }
-    try:
-        body = json.loads(request.body.decode('utf-8'))
-        user_id = body.get('userID')
-        response['userID'] = user_id
-
-        with transaction.atomic():
-            user = user_accounts.objects.get(user_id=user_id)
-            user.status = False
-            user.save()
-
-        response['status'] = "SUCCESS"
-    except json.JSONDecodeError:
-        response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response)
-    except ObjectDoesNotExist:
-        response['errorMessage'] = "用户不存在"
-        return JsonResponse(response)
-    except Exception as e:
-        response['errorMessage'] = str(e)
-        return JsonResponse(response)
-
-    return JsonResponse(response)
-
-@require_http_methods(['POST'])
-def editUserBalance(request):
+@api_view(methods=['POST'], require_token=False)
+def editUserBalance(request, params):
     ''' 更改用户的余额 '''
+    user_id, new_balance = params.get('userID'), params.get('newBalance')
+    if new_balance <=0:
+        raise APIException("无效余额")
 
-    response = {
-        'status': 'ERROR',
-        'userID': None,
-        'errorMessage': None
-    }
     try:
-        body = json.loads(request.body.decode('utf-8'))
-        user_id = body.get('userID')
-        new_balance = body.get('newBalance')
-        response['userID'] = user_id
-
-        if new_balance <=0:
-            response['errorMessage'] = "无效余额"
-            return JsonResponse(response)
-            
-        with transaction.atomic():
-            user = user_accounts.objects.get(user_id=user_id)
-            if user.status:
-                user.user_balance = new_balance
-                user.save()
-                response['status'] = "SUCCESS"
-            else:
-                response['errorMessage'] = "用户账号已弃用"
-                return JsonResponse(response, status=403)
-
-    except json.JSONDecodeError:
-        response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response)
+        user = user_accounts.objects.get(user_id=user_id)
     except ObjectDoesNotExist:
-        response['errorMessage'] = "用户不存在"
-        return JsonResponse(response)
-    except Exception as e:
-        response['errorMessage'] = str(e)
-        return JsonResponse(response)
+        raise APIException("用户不存在")
+    if user.status:
+        with transaction.atomic():
+            user.user_balance = new_balance
+            user.save()
+        return { 'userID': user_id }
+    else:
+        raise APIException("用户账号已弃用", 403)
 
-    return JsonResponse(response)
-
-@require_http_methods(['GET'])
-def queryUsers(request):
+@api_view(methods=['GET'], require_token=False)
+def queryUsers(request, params):
     ''' 查询用户账户 '''
-
-    response = {
-        'status': 'ERROR',
-        'userList': None,
-        'errorMessage': None
-    }
-    try:
-        users = user_accounts.objects.all()
-        user_list = []
-        for user in users:
-            user_map = {
-                'userID': user.user_id,
-                'userEmail': user.user_email,
-                'userName': user.user_name,
-                'userBalance': user.user_balance,
-                'status': user.status
-            }
-            user_list.append(user_map)
-        response['userList'], response['status'] = user_list, "SUCCESS"
-    except Exception as e:
-        response['errorMessage'] = str(e)
-        return JsonResponse(response)
-
-    return JsonResponse(response)
+    users = user_accounts.objects.all()
+    user_list = []
+    for user in users:
+        user_map = {
+            'userID': user.user_id,
+            'userEmail': user.user_email,
+            'userName': user.user_name,
+            'userBalance': user.user_balance,
+            'status': user.status
+        }
+        user_list.append(user_map)
+    return { 'userList': user_list }

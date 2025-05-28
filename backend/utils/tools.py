@@ -5,6 +5,7 @@ import random, string
 import tushare as ts
 import re, os
 
+from .response_view import APIException
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
@@ -18,17 +19,17 @@ pro = ts.pro_api(TUSHARE_TOKEN)
 
 def validatePasswordComplexity(user_password: str):
     if len(user_password) < 8 or len(user_password) > 15:
-        raise Exception("密码长度必须在8-15位之间")
+        raise APIException("密码长度必须在8-15位之间")
 
     if not any(char.isdigit() for char in user_password):
-        raise Exception("密码必须包含至少一个数字")
+        raise APIException("密码必须包含至少一个数字")
     
     if not any(char.isalpha() for char in user_password):
-        raise Exception("密码必须包含至少一个字母")
+        raise APIException("密码必须包含至少一个字母")
 
     allowed_pattern = r'^[a-zA-Z0-9_*!]+$'
     if not re.match(allowed_pattern, user_password):
-        raise Exception("密码只能包含字母、数字和'_'、'*'、'!'特殊字符")
+        raise APIException("密码只能包含字母、数字和'_'、'*'、'!'特殊字符")
 
 def tradable():
     # 测试模式不检查是否能够交易

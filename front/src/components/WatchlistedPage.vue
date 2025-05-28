@@ -76,7 +76,7 @@ export default {
                     }
                     this.favoriteStocksList = response.data.favoriteStocksList;
                 } else {
-                    alert('获取自选股信息失败: ' + response.data.errorMessage);
+                    this.$message.error('获取自选股信息失败: ' + response.data.errorMessage);
                 }
             } catch (error) {
                 alert('请求失败: ' + error.message);
