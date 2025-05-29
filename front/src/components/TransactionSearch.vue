@@ -1,62 +1,205 @@
 <template>
   <div class="transaction-page">
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <h1 class="page-title">
+        <i class="icon-chart">📊</i>
+        交易记录管理
+      </h1>
+      <p class="page-subtitle">查看您的交易历史和收益趋势</p>
+    </div>
+
     <!-- 交易收益折线图 -->
     <div class="charts-section">
       <div class="chart-container">
+        <div class="chart-header">
+          <h3 class="chart-title">交易收益趋势</h3>
+          <div class="chart-legend">
+            <span class="legend-item profit">盈利</span>
+            <span class="legend-item loss">亏损</span>
+          </div>
+        </div>
         <div id="transactionProfitChart" class="chart"></div>
       </div>
     </div>
 
     <!-- 搜索区域 -->
     <div class="search-section">
-      <select v-model="searchType">
-        <option value="type">交易类型</option>
-        <option value="code">股票代码</option>
-        <option value="name">股票名称</option>
-      </select>
-      <input v-if="searchType !== 'type'" type="text" v-model="searchKeyword" placeholder="输入搜索关键词" />
-      <select v-else v-model="searchKeyword">
-        <option value="">全部</option>
-        <option value="0">买入</option>
-        <option value="1">卖出</option>
-      </select>
-      <button @click="searchTransactions">搜索</button>
+      <div class="search-container">
+        <div class="search-header">
+          <h3 class="search-title">
+            <i class="icon-search">🔍</i>
+            筛选交易记录
+          </h3>
+        </div>
+        <div class="search-controls">
+          <div class="control-group search-type-group">
+            <label class="control-label" style="color: black;">搜索类型</label>
+            <div class="select-wrapper">
+              <select v-model="searchType" class="search-select">
+                <option value="type">交易类型</option>
+                <option value="code">股票代码</option>
+                <option value="name">股票名称</option>
+              </select>
+              <div class="select-arrow">▼</div>
+            </div>
+          </div>
+
+          <div class="control-group" v-if="searchType !== 'type'">
+            <label class="control-label" style="color: black;">关键词</label>
+            <div class="input-wrapper">
+              <input type="text" v-model="searchKeyword" placeholder="输入搜索关键词" class="search-input"
+                @keyup.enter="searchTransactions" />
+              <span class="input-icon" v-if="searchKeyword" @click="searchKeyword = ''">✕</span>
+            </div>
+          </div>
+
+          <div class="control-group" v-else>
+            <label class="control-label" style="color: black;">交易类型</label>
+            <div class="select-wrapper">
+              <select v-model="searchKeyword" class="search-select">
+                <option value="">全部交易</option>
+                <option value="0">买入交易</option>
+                <option value="1">卖出交易</option>
+              </select>
+              <div class="select-arrow">▼</div>
+            </div>
+          </div>
+
+          <div class="control-group button-group">
+            <button @click="searchTransactions" class="search-btn">
+              <i class="btn-icon">🔍</i>
+              <span>搜索</span>
+            </button>
+            <button @click="resetSearch" class="reset-btn">
+              <i class="btn-icon">🔄</i>
+              <span>重置</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 统计信息 -->
+    <div class="stats-section" v-if="transactionList.length > 0">
+      <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <div class="stat-content">
+          <div class="stat-value">{{ totalTransactions }}</div>
+          <div class="stat-label">总交易数</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-content">
+          <div class="stat-value" :class="{ 'profit': totalProfit >= 0, 'loss': totalProfit < 0 }">
+            {{ totalProfit >= 0 ? '+' : '' }}{{ totalProfit.toFixed(2) }}
+          </div>
+          <div class="stat-label">总收益(元)</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-content">
+          <div class="stat-value">{{ buyCount }}/{{ sellCount }}</div>
+          <div class="stat-label">买入/卖出</div>
+        </div>
+      </div>
     </div>
 
     <!-- 交易记录列表 -->
-    <div class="transaction-list">
-      <div v-for="transaction in paginatedTransactions"
-        :key="`${transaction.stock_code}_${transaction.transaction_type}_${transaction.transaction_date}`"
-        class="transaction-item">
-        <div class="transaction-info">
-          <p>交易类型: {{ transaction.transaction_type === 0 ? '买入' : '卖出' }}</p>
-          <p>股票代码: {{ transaction.stock_code }} 股票名称: {{ transaction.stock_name }}</p>
-          <p>交易时间: {{ transaction.transaction_date }}</p>
-          <p>交易数量: {{ transaction.transaction_number }} 交易单价: {{ transaction.per_price }} 元</p>
-          <p :style="`color: ${transaction.gains >= 0 ? 'red' : 'green'}`">
-            收益: {{ transaction.gains }} 元
-          </p>
+    <div class="transaction-section">
+      <div class="section-header">
+        <h3 class="section-title">
+          <i class="icon-list">📋</i>
+          交易记录
+          <span class="record-count">({{ filteredTransactions ? filteredTransactions.length : transactionList.length
+            }}条记录)</span>
+        </h3>
+      </div>
+
+      <div class="transaction-list" v-if="paginatedTransactions.length > 0">
+        <div v-for="transaction in paginatedTransactions"
+          :key="`${transaction.stock_code}_${transaction.transaction_type}_${transaction.transaction_date}`"
+          class="transaction-item">
+          <div class="transaction-header">
+            <div class="transaction-type"
+              :class="{ 'buy': transaction.transaction_type === 0, 'sell': transaction.transaction_type === 1 }">
+              <i class="type-icon">{{ transaction.transaction_type === 0 ? '📈' : '📉' }}</i>
+              {{ transaction.transaction_type === 0 ? '买入' : '卖出' }}
+            </div>
+            <div class="transaction-profit"
+              :class="{ 'profit': transaction.gains >= 0, 'loss': transaction.gains < 0 }">
+              {{ transaction.gains >= 0 ? '+' : '' }}{{ transaction.gains }} 元
+            </div>
+          </div>
+
+          <div class="transaction-body">
+            <div class="stock-info">
+              <div class="stock-code">{{ transaction.stock_code }}</div>
+              <div class="stock-name">{{ transaction.stock_name }}</div>
+            </div>
+
+            <div class="transaction-details">
+              <div class="detail-row">
+                <span class="detail-label">交易时间:</span>
+                <span class="detail-value">{{ formatDate(transaction.transaction_date) }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">交易数量:</span>
+                <span class="detail-value">{{ transaction.transaction_number }} 股</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">交易单价:</span>
+                <span class="detail-value">¥{{ transaction.per_price }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">交易金额:</span>
+                <span class="detail-value total-amount">¥{{ (transaction.transaction_number *
+                  transaction.per_price).toFixed(2) }}</span>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div v-else class="empty-state">
+        <div class="empty-icon">📭</div>
+        <div class="empty-text">暂无交易记录</div>
+        <div class="empty-subtext">请尝试调整搜索条件</div>
       </div>
     </div>
 
     <!-- 分页控件 -->
     <div class="pagination" v-if="totalPages > 1">
-      <button :disabled="currentPage === 1" @click="currentPage--"
-        :class="{ 'disabled': currentPage === 1 }">上一页</button>
-      <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
-      <button :disabled="currentPage === totalPages" @click="currentPage++"
-        :class="{ 'disabled': currentPage === totalPages }">下一页</button>
-    </div>
+      <button :disabled="currentPage === 1" @click="currentPage--" :class="{ 'disabled': currentPage === 1 }"
+        class="pagination-btn prev-btn">
+        <i class="btn-icon">⬅️</i>
+        上一页
+      </button>
 
+      <div class="page-numbers">
+        <button v-for="page in visiblePages" :key="page" @click="currentPage = page"
+          :class="{ 'active': page === currentPage }" class="page-number">
+          {{ page }}
+        </button>
+      </div>
+
+      <button :disabled="currentPage === totalPages" @click="currentPage++"
+        :class="{ 'disabled': currentPage === totalPages }" class="pagination-btn next-btn">
+        下一页
+        <i class="btn-icon">➡️</i>
+      </button>
+    </div>
   </div>
 </template>
 
 <script>
 import * as echarts from 'echarts';
+import '@/css/TransactionSearch.css';
 
 export default {
-  name: 'TransactionPage',
+  name: 'TransactionSearch',
   data() {
     return {
       searchType: 'type',
@@ -65,33 +208,93 @@ export default {
       filteredTransactions: [],
       transactionProfitList: [],
       currentPage: 1,
-      itemsPerPage: 12,
+      itemsPerPage: 9, // 改为9个，3x3布局更美观
       profitChart: null,
+      loading: false,
     };
   },
   async mounted() {
-    await this.fetchTransactionData();
-    await this.loadChartData();
+    this.loading = true;
+    try {
+      await Promise.all([
+        this.fetchTransactionData(),
+        this.loadChartData()
+      ]);
+    } finally {
+      this.loading = false;
+    }
   },
   computed: {
     paginatedTransactions() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
-      if (this.filteredTransactions) {
-        return this.filteredTransactions.slice(start, end);
-      } else {
-        return this.transactionList.slice(start, end);
-      }
+      const transactions = this.filteredTransactions || this.transactionList;
+      return transactions.slice(start, end);
     },
     totalPages() {
-      if (this.filteredTransactions) {
-        return Math.ceil(this.filteredTransactions.length / this.itemsPerPage);
-      } else {
-        return Math.ceil(this.transactionList.length / this.itemsPerPage);
-      }
+      const transactions = this.filteredTransactions || this.transactionList;
+      return Math.ceil(transactions.length / this.itemsPerPage);
     },
+    visiblePages() {
+      const pages = [];
+      const total = this.totalPages;
+      const current = this.currentPage;
+
+      if (total <= 7) {
+        for (let i = 1; i <= total; i++) {
+          pages.push(i);
+        }
+      } else {
+        if (current <= 4) {
+          for (let i = 1; i <= 5; i++) pages.push(i);
+          pages.push('...');
+          pages.push(total);
+        } else if (current >= total - 3) {
+          pages.push(1);
+          pages.push('...');
+          for (let i = total - 4; i <= total; i++) pages.push(i);
+        } else {
+          pages.push(1);
+          pages.push('...');
+          for (let i = current - 1; i <= current + 1; i++) pages.push(i);
+          pages.push('...');
+          pages.push(total);
+        }
+      }
+      return pages;
+    },
+    totalTransactions() {
+      return this.transactionList.length;
+    },
+    totalProfit() {
+      return this.transactionList.reduce((sum, transaction) => {
+        return sum + (transaction.gains || 0);
+      }, 0);
+    },
+    buyCount() {
+      return this.transactionList.filter(t => t.transaction_type === 0).length;
+    },
+    sellCount() {
+      return this.transactionList.filter(t => t.transaction_type === 1).length;
+    }
   },
   methods: {
+    formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    },
+    resetSearch() {
+      this.searchType = 'type';
+      this.searchKeyword = '';
+      this.filteredTransactions = [...this.transactionList];
+      this.currentPage = 1;
+    },
     async loadChartData() {
       const userID = localStorage.getItem('userID');
       try {
@@ -108,21 +311,27 @@ export default {
           this.$message.error('获取图表数据失败: ' + response.data.errorMessage);
         }
       } catch (error) {
-        alert('请求失败: ' + error.message);
+        this.$message.error('请求失败: ' + error.message);
       }
     },
     initTransactionProfitChart() {
       const chartDom = document.getElementById('transactionProfitChart');
       if (!chartDom) return;
+
+      // 销毁之前的图表实例
+      if (this.profitChart) {
+        this.profitChart.dispose();
+      }
+
       this.profitChart = echarts.init(chartDom);
 
       const dates = [];
       const profits = [];
       let cumulativeProfit = 0;
+
       this.transactionProfitList.forEach(item => {
         const dateStr = item[0];
         const profit = item[1];
-
         cumulativeProfit += profit;
         dates.push(dateStr);
         profits.push(cumulativeProfit.toFixed(2));
@@ -130,56 +339,120 @@ export default {
 
       const option = {
         title: {
-          text: '交易收益变化趋势',
-          left: 'center'
+          text: '累计收益趋势',
+          left: 'center',
+          textStyle: {
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: '#333'
+          }
         },
         tooltip: {
           trigger: 'axis',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderColor: '#e6e6e6',
+          borderWidth: 1,
+          textStyle: {
+            color: '#333'
+          },
           formatter: function (params) {
             const param = params[0];
-            return `日期: ${param.name}<br/>累计收益: ${param.value} 元`;
+            const value = parseFloat(param.value);
+            const color = value >= 0 ? '#f56c6c' : '#67c23a';
+            return `
+              <div style="padding: 8px;">
+                <div style="margin-bottom: 4px; font-weight: bold;">${param.name}</div>
+                <div style="color: ${color}; font-size: 14px;">
+                  累计收益: ${value >= 0 ? '+' : ''}${value} 元
+                </div>
+              </div>
+            `;
           }
         },
         xAxis: {
           type: 'category',
           data: dates,
-          name: '日期',
-          nameLocation: 'middle',
-          nameGap: 30,
           axisLabel: {
             rotate: 45,
-            interval: 'auto'
+            interval: 'auto',
+            color: '#666'
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#e6e6e6'
+            }
           }
         },
         yAxis: {
           type: 'value',
           name: '累计收益(元)',
-          nameLocation: 'middle',
-          nameGap: 30
+          nameTextStyle: {
+            color: '#666'
+          },
+          axisLabel: {
+            color: '#666',
+            formatter: function (value) {
+              return value >= 0 ? '+' + value : value;
+            }
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#e6e6e6'
+            }
+          },
+          splitLine: {
+            lineStyle: {
+              color: '#f5f5f5'
+            }
+          }
         },
         series: [
           {
             name: '累计收益',
             type: 'line',
             data: profits,
+            smooth: true,
+            symbol: 'circle',
+            symbolSize: 6,
             itemStyle: {
               color: function (params) {
-                return params.value >= 0 ? '#c23531' : '#2f4554';
+                return params.value >= 0 ? '#f56c6c' : '#67c23a';
               }
             },
             lineStyle: {
-              width: 2
+              width: 3,
+              color: {
+                type: 'linear',
+                x: 0, y: 0, x2: 1, y2: 0,
+                colorStops: [
+                  { offset: 0, color: '#67c23a' },
+                  { offset: 1, color: '#f56c6c' }
+                ]
+              }
             },
             areaStyle: {
-              opacity: 0.2
+              opacity: 0.1,
+              color: {
+                type: 'linear',
+                x: 0, y: 0, x2: 0, y2: 1,
+                colorStops: [
+                  { offset: 0, color: '#f56c6c' },
+                  { offset: 1, color: '#67c23a' }
+                ]
+              }
             },
             markLine: {
+              silent: true,
               data: [
                 {
                   yAxis: 0,
                   lineStyle: {
-                    color: '#000',
-                    type: 'dashed'
+                    color: '#909399',
+                    type: 'dashed',
+                    width: 2
+                  },
+                  label: {
+                    show: false
                   }
                 }
               ]
@@ -190,28 +463,42 @@ export default {
           left: '3%',
           right: '4%',
           bottom: '15%',
+          top: '15%',
           containLabel: true
         },
         dataZoom: [
           {
             type: 'inside',
-            start: 0,
+            start: Math.max(0, 100 - (dates.length > 30 ? 30 : dates.length) * 3),
             end: 100
           },
           {
             type: 'slider',
-            start: 0,
-            end: 100
+            start: Math.max(0, 100 - (dates.length > 30 ? 30 : dates.length) * 3),
+            end: 100,
+            height: 30
           }
         ]
       };
 
       this.profitChart.setOption(option);
-      window.addEventListener('resize', () => {
-        this.profitChart.resize();
+
+      // 响应式处理
+      const resizeHandler = () => {
+        if (this.profitChart) {
+          this.profitChart.resize();
+        }
+      };
+      window.addEventListener('resize', resizeHandler);
+
+      // 组件销毁时移除监听器
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', resizeHandler);
+        if (this.profitChart) {
+          this.profitChart.dispose();
+        }
       });
     },
-    // 获取交易记录数据
     async fetchTransactionData() {
       const userID = localStorage.getItem('userID');
       if (!userID) {
@@ -225,278 +512,45 @@ export default {
         });
 
         if (response.data.status === 'SUCCESS') {
-          this.transactionList = response.data.stockTransactionList;
-          console.log(this.transactionList);
-          this.filteredTransactions = this.transactionList; // 初始显示全部数据
+          this.transactionList = response.data.stockTransactionList.sort((a, b) => {
+            return new Date(b.transaction_date) - new Date(a.transaction_date);
+          });
+          this.filteredTransactions = [...this.transactionList];
         } else {
           this.$message.error('获取交易记录失败: ' + response.data.errorMessage);
         }
       } catch (error) {
-        alert('请求失败: ' + error.message);
+        this.$message.error('请求失败: ' + error.message);
       }
     },
-
-    // 根据搜索条件过滤交易记录
     searchTransactions() {
       this.currentPage = 1;
       if (this.searchKeyword === '') {
-        this.filteredTransactions = [...this.transactionList]; 
+        this.filteredTransactions = [...this.transactionList];
         return;
       }
-      const keywordLower = this.searchKeyword.toLowerCase();
 
+      const keywordLower = this.searchKeyword.toLowerCase();
       this.filteredTransactions = this.transactionList.filter((transaction) => {
         if (this.searchType === 'type') {
           return transaction.transaction_type.toString() === this.searchKeyword;
         } else if (this.searchType === 'code') {
-          return transaction.stock_code && typeof transaction.stock_code === 'string' &&
+          return transaction.stock_code &&
+            typeof transaction.stock_code === 'string' &&
             transaction.stock_code.toLowerCase().includes(keywordLower);
         } else if (this.searchType === 'name') {
-          return transaction.stock_name && typeof transaction.stock_name === 'string' &&
+          return transaction.stock_name &&
+            typeof transaction.stock_name === 'string' &&
             transaction.stock_name.toLowerCase().includes(keywordLower);
         }
         return false;
       });
     },
   },
+  beforeDestroy() {
+    if (this.profitChart) {
+      this.profitChart.dispose();
+    }
+  }
 };
 </script>
-
-<style scoped>
-/* 页面基础样式 */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: 'Microsoft YaHei', Arial, sans-serif;
-  background-color: #f5f5f5;
-  color: #333;
-  line-height: 1.6;
-}
-
-.transaction-page {
-  max-width: 1200px;
-  margin: 20px auto;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-/* 图表区域样式 */
-.charts-section {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 25px;
-  margin-bottom: 35px;
-}
-
-.chart-container {
-  flex: 1;
-  min-width: 300px;
-  background-color: #f9f9f9;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  padding: 20px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.chart-container:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-}
-
-.chart {
-  width: 100%;
-  height: 400px;
-}
-
-/* 搜索区域样式 */
-.search-section {
-  display: flex;
-  align-items: center;
-  margin-bottom: 30px;
-  gap: 15px;
-  width: 80%;
-}
-
-.search-section select,
-.search-section input {
-  padding: 12px;
-  border: 1px solid #dcdfe6;
-  border-radius: 8px;
-  font-size: 14px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  transition: border-color 0.3s;
-}
-
-.search-section select:focus,
-.search-section input:focus {
-  border-color: #409eff;
-  outline: none;
-}
-
-.search-section select {
-  width: 20%;
-}
-
-.search-section input {
-  width: 40%;
-}
-
-.search-section button {
-  padding: 12px 20px;
-  background-color: #409eff;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s;
-  box-shadow: 0 3px 8px rgba(64, 158, 255, 0.3);
-}
-
-.search-section button:hover {
-  background-color: #66b1ff;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 12px rgba(64, 158, 255, 0.4);
-}
-
-.search-section button:active {
-  transform: translateY(0);
-}
-
-/* 交易记录列表样式 */
-.transaction-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 25px;
-}
-
-.transaction-item {
-  background-color: #f9f9f9;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.transaction-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-.transaction-info p {
-  margin: 8px 0;
-  font-size: 15px;
-  color: #555;
-  padding: 8px 0;
-  border-bottom: 1px dashed #eee;
-}
-
-.transaction-info p:last-child {
-  border-bottom: none;
-  font-weight: 600;
-  font-size: 16px;
-}
-
-/* 分页控件样式 */
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 30px;
-  gap: 20px;
-}
-
-.pagination button {
-  padding: 10px 20px;
-  background-color: #409eff;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s;
-  box-shadow: 0 3px 8px rgba(64, 158, 255, 0.3);
-}
-
-.pagination button:hover:not(.disabled) {
-  background-color: #66b1ff;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 12px rgba(64, 158, 255, 0.4);
-}
-
-.pagination button:active:not(.disabled) {
-  transform: translateY(0);
-}
-
-.pagination button.disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.page-info {
-  font-size: 16px;
-  font-weight: bold;
-  color: #555;
-}
-
-/* 响应式布局 */
-@media (max-width: 768px) {
-  .search-section {
-    flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
-  }
-
-  .search-section select,
-  .search-section input,
-  .search-section button {
-    width: 100%;
-    margin-bottom: 10px;
-  }
-
-  .transaction-list {
-    grid-template-columns: 1fr;
-  }
-
-  .transaction-item {
-    padding: 15px;
-  }
-
-  .charts-section {
-    flex-direction: column;
-  }
-
-  .chart-container {
-    width: 100%;
-  }
-
-  .chart {
-    height: 300px;
-  }
-}
-
-/* 自定义动画 */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.transaction-item {
-  animation: fadeIn 0.3s ease-out;
-}
-</style>

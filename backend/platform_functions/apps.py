@@ -39,7 +39,7 @@ class StockPlatformConfig(AppConfig):
             self.on_startup()
 
     def on_startup(self):
-        from .stock_basic_views import updateStockBasic, cleanMarket
+        from .services import updateStockBasic, cleanMarket
         check_redis()
         cleanMarket()
         updateStockBasic()

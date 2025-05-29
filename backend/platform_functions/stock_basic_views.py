@@ -15,6 +15,7 @@ from django.utils import timezone
 from .models import user_accounts, stock_basic, stock_ownership, stock_transactions, stock_market, user_favorite_stocks
 from utils.tools import tradable, get_previous_workday, ts, pro
 from utils.response_view import api_view, APIException
+from platform_functions import services
 
 load_dotenv()
 warnings.filterwarnings("ignore")
@@ -64,14 +65,6 @@ def updateStockBasic():
             stock_basic.objects.bulk_create(new_records)
     except Exception as e:
         print(f"股票列表更新失败: {str(e)}")
-
-def cleanMarket():
-    ''' 清理stock_market表  '''
-    try:
-        with transaction.atomic():
-            stock_market.objects.all().delete()
-    except Exception as e:
-        print(f"清除stock_market表错误: {str(e)}")
 
 @api_view(methods=['GET'], require_token=False)
 def isTrading(request, params):
@@ -259,90 +252,44 @@ def removeFavoriteStock(request, params):
     else:
         raise APIException("该股票不在自选股中")
 
-@require_http_methods(['GET'])
-def loadHomePageData(request):
+@api_view(methods=['GET'], use_cache=True, cache_timeout=60 * 60, require_token=False)
+def loadHomePageData(request, params, cache_manager):
     ''' 加载搜索主页的信息 '''
+    Shanghai_top10, Shenzhen_top10 = {}, {}
+    news_information, significant_index = {}, {}
+    trade_date = get_previous_workday()
 
-    response = {
-       'status': 'ERROR',
-       'errorMessage': None,
-       'ShanghaiTop10': None,
-       'ShenzhenTop10': None,
-       'newsInformation': None,
-       'significantIndex': None
+    # 上海十大成交股
+    sh_top10_cache_key = f"sh_top10_{trade_date}"
+    Shanghai_top10 = cache_manager.get_or_set(
+        lambda: services._get_shanghai_top10(trade_date), 
+        sh_top10_cache_key
+    )
+
+    # 深圳十大成交股
+    sz_top10_cache_key = f"sz_top10_{trade_date}"
+    Shenzhen_top10 = cache_manager.get_or_set(
+        lambda: services._get_shenzhen_top10(trade_date), 
+        sz_top10_cache_key
+    )
+
+    # 获取新闻信息
+    news_cache_key = f"stock_news_{timezone.now().strftime('%Y-%m-%d %H')}"
+    news_information = cache_manager.get_or_set(
+        lambda: services._get_news_information(), 
+        news_cache_key
+    )
+
+    # 获取重要指数信息
+    index_cache_key = f"significant_index_{trade_date}"
+    significant_index = cache_manager.get_or_set(
+        lambda: services._get_significant_index(trade_date), 
+        index_cache_key
+    )
+
+    return {
+        'ShanghaiTop10': Shanghai_top10,
+        'ShenzhenTop10': Shenzhen_top10,
+        'newsInformation': news_information,
+        'significantIndex': significant_index
     }
-    try:
-        Shanghai_top10, Shenzhen_top10 = {}, {}
-        news_information, significant_index = {}, {}
-        trade_date = get_previous_workday()
-
-        # 新增缓存key
-        sh_top10_cache_key = f"sh_top10_{trade_date}"
-        sz_top10_cache_key = f"sz_top10_{trade_date}"
-        index_cache_key = f"significant_index_{trade_date}"
-        news_cache_key = f"stock_news_{timezone.now().strftime('%Y-%m-%d %H')}"
-
-        # 上海十大成交股缓存
-        Shanghai_top10 = cache.get(sh_top10_cache_key)
-        if Shanghai_top10 is None:
-            Shanghai_data = pro.hsgt_top10(trade_date=trade_date, market_type='1')[['name', 'amount']].sort_values('amount', ascending=False)
-            Shanghai_data['amount'] = Shanghai_data['amount'].apply(lambda x: f'{x / 100000000:.2f}亿')
-            Shanghai_top10 = Shanghai_data.set_index('name')['amount'].to_dict()
-            cache.set(sh_top10_cache_key, Shanghai_top10, timeout=24 * 3600)
-
-        # 深圳十大成交股缓存
-        Shenzhen_top10 = cache.get(sz_top10_cache_key)
-        if Shenzhen_top10 is None:
-            Shenzhen_data = pro.hsgt_top10(trade_date=trade_date, market_type='3')[['name', 'amount']].sort_values('amount', ascending=False)
-            Shenzhen_data['amount'] = Shenzhen_data['amount'].apply(lambda x: f'{x / 100000000:.2f}亿')
-            Shenzhen_top10 = Shenzhen_data.set_index('name')['amount'].to_dict()
-            cache.set(sz_top10_cache_key, Shenzhen_top10, timeout=24 * 3600)
-
-        # 获取新闻信息
-        news_information = cache.get(news_cache_key)
-        if news_information is None:
-            news_data = pro.news(src='eastmoney', start_date=timezone.now().strftime('%Y-%m-%d') + ' 00:00:00', fields='datetime,content').head(10)
-            news_information = news_data.set_index('datetime')['content'].to_dict()
-            cache.set(news_cache_key, news_information, timeout=24 * 3600)
-
-        # 获取上证指数、深证成指、创业板指的最新行情
-        significant_index = cache.get(index_cache_key)
-        if significant_index is None:
-            shanghai = pro.index_daily(ts_code='000001.SH', trade_date=trade_date)
-            SZSE = pro.index_daily(ts_code='399001.SZ', trade_date=trade_date)
-            GEM = pro.index_daily(ts_code='399006.SZ', trade_date=trade_date)
-
-            if not shanghai.empty:
-                shanghai = shanghai.iloc[0]
-                sh_val = round((shanghai['close'] - shanghai['pre_close']) / shanghai['pre_close'] * 100, 4)
-            else:
-                sh_val = 0
-
-            if not SZSE.empty:
-                SZSE = SZSE.iloc[0]
-                sz_val = round((SZSE['close'] - SZSE['pre_close']) / SZSE['pre_close'] * 100, 4)
-            else:
-                sz_val = 0
-
-            if not GEM.empty:
-                GEM = GEM.iloc[0]
-                gem_val = round((GEM['close'] - GEM['pre_close']) / GEM['pre_close'] * 100, 4)
-            else:
-                gem_val = 0
-
-            significant_index = {
-                '上证指数': sh_val,
-                '深证成指': sz_val,
-                '创业板指': gem_val
-            }
-            cache.set(index_cache_key, significant_index, timeout=24 * 3600)
-
-        response['status'], response['ShanghaiTop10'], response['ShenzhenTop10'], response['newsInformation'], response['significantIndex'] = 'SUCCESS', Shanghai_top10, Shenzhen_top10, news_information, significant_index
-    except json.JSONDecodeError:
-        response['errorMessage'] = "无效的JSON负载"
-        return JsonResponse(response)
-    except Exception as e:
-        response['errorMessage'] = str(e)
-        return JsonResponse(response)
-
-    return JsonResponse(response)

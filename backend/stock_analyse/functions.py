@@ -99,11 +99,4 @@ def calculate_sharpe_ratio(rate, data):
     data = data / 100
     mean, std = np.mean(data), np.std(data)
     sharpe_ratio = (mean - rate) / std
-    return mean, round(sharpe_ratio, 2)
-
-if __name__ == '__main__':
-    stock_code = '002558.SZ'
-    # end_date = timezone.now().date()
-    # start_date = end_date - datetime.timedelta(days=500)
-    # start_date, end_date = start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')
-    # data = pro.daily(ts_code=stock_code, start_date=start_date, end_date=end_date)
+    return round(mean * 10, 4), round(sharpe_ratio, 2)

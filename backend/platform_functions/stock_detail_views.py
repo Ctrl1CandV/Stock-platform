@@ -3,7 +3,7 @@ import datetime
 import json
 
 from utils.response_view import api_view, APIResponse, APIException
-from . import stock_detail_functions
+from platform_functions import services
 from django.db import transaction
 from django.utils import timezone
 from .models import stock_market
@@ -22,7 +22,7 @@ def updateAnnualDailyQuotes(request, params):
         end_date = timezone.now().date()
         start_date = end_date - datetime.timedelta(days=500)
         start_date, end_date = start_date.strftime('%Y%m%d'), end_date.strftime('%Y%m%d')
-        stock_daily = stock_detail_functions.pro.daily(ts_code=stock_code, start_date=start_date, end_date=end_date)
+        stock_daily = services.pro.daily(ts_code=stock_code, start_date=start_date, end_date=end_date)
         stock_daily = stock_daily[['trade_date', 'open', 'high', 'low', 'close', 'pct_chg', 'vol', 'amount']]
         with transaction.atomic():
             # 删去冗余数据
@@ -58,7 +58,7 @@ def showStockQurve(request, params, cache_manager):
     if time_span <= 0 or time_span >= 3000:
         raise APIException(message="无效的时间跨度")
     
-    data, title = cache_manager.get_or_set(lambda: stock_detail_functions.get_stock_data(stock_code, time_span, time_type))
+    data, title = cache_manager.get_or_set(lambda: services.get_stock_data(stock_code, time_span, time_type))
     return { 'data': data, 'title': title }
 
 @api_view(methods=['GET'], use_cache=True, require_token=False)
@@ -76,9 +76,9 @@ def showTechnicalIndicator(request, params, cache_manager):
                 'low': 'low',
                 'close': 'close'
             }, inplace=True)
-            indicator_data = stock_detail_functions.technical_indicator_data(stock_code, data)
+            indicator_data = services.technical_indicator_data(stock_code, data)
         else:
-            indicator_data = stock_detail_functions.technical_indicator_data(stock_code)
+            indicator_data = services.technical_indicator_data(stock_code)
         return indicator_data
 
     indicator_data = cache_manager.get_or_set(get_indicator_data)
@@ -88,14 +88,14 @@ def showTechnicalIndicator(request, params, cache_manager):
 def getFinancialMetric(request, params, cache_manager):
     ''' 获取公司财务指标数据 '''
     stock_code = params.get('stockCode')
-    financial_metric_map = cache_manager.get_or_set(lambda: stock_detail_functions.financial_metric_form(stock_code))
+    financial_metric_map = cache_manager.get_or_set(lambda: services.financial_metric_form(stock_code))
     return { 'financialMetricMap': financial_metric_map }
 
 @api_view(methods=['GET'], use_cache=True, require_token=False)
 def showValuationRatio(request, params, cache_manager):
     ''' 展示股票估值比率的变化图 '''
     stock_code = params.get('stockCode')
-    valuation_data = cache_manager.get_or_set(lambda: stock_detail_functions.valuation_ratio_data(stock_code))
+    valuation_data = cache_manager.get_or_set(lambda: services.valuation_ratio_data(stock_code))
     return { 'valuationData': valuation_data }
 
 @api_view(methods=['GET'], use_cache=True, require_token=False)

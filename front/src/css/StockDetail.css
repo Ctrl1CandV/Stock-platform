@@ -1,0 +1,1297 @@
+/* 全局容器样式 */
+.stock-detail-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* 顶部股票信息卡片 */
+.stock-header-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stock-basic-info {
+  flex: 1;
+}
+
+.stock-title {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.stock-name {
+  font-size: 32px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stock-code {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.stock-intro {
+  color: #7f8c8d;
+  font-size: 16px;
+  line-height: 1.6;
+  max-width: 80%;
+}
+
+.stock-quick-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px; /* 增加间隔 */
+  padding: 35px; /* 增加内边距 */
+  background: rgba(248, 249, 250, 0.95);
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.stat-item {
+  text-align: left; /* 改为左对齐，更好展示标签和数据 */
+  padding: 18px; /* 增加内边距 */
+  background: white;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 80px; /* 设置最小高度保证一致性 */
+}
+
+.stat-item:hover {
+  background: #f8f9fa;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stat-label {
+  display: block;
+  font-size: 15px; /* 增大标签字体 */
+  color: #2c3e50;
+  margin-bottom: 10px; /* 增加间距 */
+  font-weight: 600; /* 增加字重 */
+  white-space: nowrap;
+  font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+  letter-spacing: 0.5px; /* 增加字符间距，让汉字更清晰 */
+  min-width: 80px; /* 设置最小宽度，让标签更长 */
+}
+
+.stat-value {
+  display: block;
+  font-size: 20px; /* 显著增大数据字体 */
+  font-weight: 700;
+  color: #2c3e50;
+  white-space: nowrap;
+  font-family: 'Microsoft YaHei', '微软雅黑', 'Segoe UI', Arial, sans-serif;
+  line-height: 1.2; /* 调整行高 */
+  letter-spacing: 0.3px; /* 增加字符间距 */
+}
+
+/* 特殊颜色处理 - 保持原有的彩色效果，但字体更大 */
+.stat-value.price {
+  color: #f39c12;
+  font-size: 22px; /* 价格字体更大 */
+  font-weight: 800;
+}
+
+.stat-value.change.positive {
+  color: #27ae60;
+  font-size: 21px;
+}
+
+.stat-value.change.negative {
+  color: #e74c3c;
+  font-size: 21px;
+}
+
+.stat-value.open {
+  color: #3498db;
+  font-size: 20px;
+}
+
+.stat-value.volume {
+  color: #9b59b6;
+  font-size: 19px;
+}
+
+.stat-value.market-cap {
+  color: #e91e63;
+  font-size: 19px;
+}
+
+.stat-value.pe-ratio {
+  color: #ff9800;
+  font-size: 19px;
+}
+
+/* 主要内容区域 - 优化布局防止超出 */
+.main-content {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); /* 使用 minmax 确保最小宽度 */
+  gap: 20px; /* 减少间距 */
+  align-items: start;
+  margin-bottom: 30px; /* 为下方的财务指标模块留出空间 */
+  max-width: 100%; /* 确保不超出容器 */
+  overflow: hidden; /* 防止内容溢出 */
+  box-sizing: border-box; /* 确保包含边距和边框 */
+}
+
+/* 图表区域 */
+.charts-section {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* 卡片通用样式 */
+.chart-card,
+.info-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.chart-card:hover,
+.info-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+}
+
+/* 卡片头部 */
+.card-header {
+  padding: 25px 30px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title i {
+  font-size: 24px;
+}
+
+/* 图表控制器 */
+.chart-controls {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.control-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.modern-select,
+.modern-input {
+  padding: 8px 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.modern-select:focus,
+.modern-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.modern-select option {
+  background: #2c3e50;
+  color: white;
+}
+
+.fetch-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fetch-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: translateY(-2px);
+}
+
+/* 技术指标标签页 */
+.indicator-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.indicator-tab {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.indicator-tab:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.indicator-tab.active {
+  background: rgba(255, 255, 255, 0.9);
+  color: #667eea;
+  border-color: rgba(255, 255, 255, 0.9);
+}
+
+/* 卡片内容 */
+.card-content {
+  padding: 30px;
+}
+
+/* 图表容器 */
+.chart-wrapper {
+  width: 100%;
+  height: 400px;
+  border-radius: 15px;
+  overflow: hidden;
+  background: #fafafa;
+}
+
+#kline-chart,
+#indicator-chart,
+#valuation-chart {
+  width: 100%;
+  height: 100%;
+}
+
+/* 加载状态 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #7f8c8d;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #ecf0f1;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 信息面板 - 优化宽度和滚动 */
+.info-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* 减少间距 */
+  /* 移除 max-height 限制，让内容完整显示 */
+  /* max-height: calc(100vh - 200px); */
+  /* overflow-y: auto; */
+  width: 100%; /* 确保不超出父容器 */
+  max-width: 100%;
+  box-sizing: border-box;
+  padding-right: 5px; /* 减少右边距 */
+  overflow-x: hidden; /* 防止水平溢出 */
+}
+
+/* 预测分析卡片 - 调整定位，避免内容被遮挡 */
+.forecast-card {
+  /* 移除 sticky 定位，让内容自然流动 */
+  /* position: sticky; */
+  /* top: 20px; */
+  position: relative;
+}
+
+.analyze-btn {
+  background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+  border: none;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 10px 20px rgba(238, 90, 36, 0.3);
+}
+
+.analyze-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(238, 90, 36, 0.4);
+}
+
+/* 预测内容 */
+.forecast-content {
+  padding: 0;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 20px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #ecf0f1;
+}
+
+/* 预测部分 */
+.prediction-section {
+  margin-bottom: 30px;
+}
+
+.prediction-cards {
+  display: grid;
+  grid-template-columns: 1fr; /* 改为单列布局 */
+  gap: 15px; /* 减少间距 */
+  margin: 0 15px; /* 添加左右边距 */
+  padding: 10px 0; /* 添加上下内边距 */
+}
+
+/* 预测卡片 - 增强颜色对比度 */
+.prediction-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+  min-height: 100px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  word-wrap: break-word;
+  overflow: hidden;
+  margin: 8px 12px; /* 添加外边距，防止贴边 */
+}
+
+.prediction-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+}
+
+.prediction-card.primary {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+}
+
+.prediction-card.positive {
+  background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+  box-shadow: 0 10px 20px rgba(0, 184, 148, 0.3);
+}
+
+.prediction-card.negative {
+  background: linear-gradient(135deg, #e17055 0%, #d63031 100%);
+  box-shadow: 0 10px 20px rgba(225, 112, 85, 0.3);
+}
+
+.prediction-icon {
+  font-size: 32px;
+  opacity: 0.8;
+}
+
+/* 预测数据区域 - 优化文字布局 */
+.prediction-data {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 8px; /* 添加左右边距 */
+  padding: 4px 0; /* 添加上下内边距 */
+}
+
+/* 预测数值 - 强化显示效果 */
+.prediction-value {
+  font-size: 28px; /* 适当减小字体 */
+  font-weight: 900; /* 增加字重 */
+  margin-bottom: 6px;
+  line-height: 1.2; /* 优化行高 */
+  letter-spacing: 0.5px; /* 增加字符间距 */
+  color: #ffffff; /* 确保纯白色 */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* 添加阴影增强对比 */
+  filter: brightness(1.1); /* 增加亮度 */
+  word-break: break-all; /* 处理长数字 */
+}
+
+/* 预测标签 - 增强可读性 */
+.prediction-label {
+  font-size: 16px; /* 适当减小字体 */
+  opacity: 1;
+  font-weight: 700; /* 增加字重 */
+  color: rgba(255, 255, 255, 1); /* 提高对比度 */
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  word-wrap: break-word;
+}
+
+/* 风险评估部分 */
+.risk-section {
+  margin-bottom: 30px;
+}
+
+.risk-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.metric-card {
+  background: #f8f9fa;
+  border-radius: 15px;
+  padding: 20px;
+  border-left: 5px solid #667eea;
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.metric-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.metric-score {
+  font-size: 24px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 20px;
+  color: white;
+}
+
+.metric-score.excellent {
+  background: linear-gradient(45deg, #00b894, #00a085);
+}
+
+.metric-score.good {
+  background: linear-gradient(45deg, #fdcb6e, #e17055);
+}
+
+.metric-score.average {
+  background: linear-gradient(45deg, #74b9ff, #0984e3);
+}
+
+.metric-score.poor {
+  background: linear-gradient(45deg, #fd79a8, #e84393);
+}
+
+.metric-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.detail-label {
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
+.detail-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* 夏普比率指示器 */
+.sharpe-indicator {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: white;
+}
+
+.sharpe-indicator.excellent {
+  background: linear-gradient(45deg, #00b894, #00a085);
+}
+
+.sharpe-indicator.good {
+  background: linear-gradient(45deg, #fdcb6e, #e17055);
+}
+
+.sharpe-indicator.average {
+  background: linear-gradient(45deg, #74b9ff, #0984e3);
+}
+
+.sharpe-indicator.poor {
+  background: linear-gradient(45deg, #fd79a8, #e84393);
+}
+
+.sharpe-value {
+  font-size: 14px;
+}
+
+.metric-description {
+  margin-top: 10px;
+}
+
+.metric-description p {
+  font-size: 14px;
+  color: #7f8c8d;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* 市场参考部分 */
+.reference-section {
+  margin-bottom: 20px;
+}
+
+.bond-rates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+}
+
+.rate-item {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  border: 2px solid #ecf0f1;
+  transition: all 0.3s ease;
+}
+
+.rate-item:hover {
+  border-color: #667eea;
+  transform: translateY(-2px);
+}
+
+.rate-period {
+  display: block;
+  font-size: 14px;
+  color: #7f8c8d;
+  margin-bottom: 5px;
+}
+
+.rate-value {
+  display: block;
+  font-size: 1px;
+  font-weight: 700;
+  color: #050200;
+}
+
+/* 财务指标卡片 */
+.financial-card {
+  max-height: 600px; /* 增加高度以容纳更多数据 */
+  overflow: hidden;
+}
+
+.financial-table-wrapper {
+  max-height: 450px; /* 增加高度 */
+  overflow: auto; /* 改为auto，支持水平和垂直滚动 */
+}
+
+.table-container {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #ecf0f1;
+  min-width: 1200px; /* 设置最小宽度以容纳所有列 */
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px; /* 稍微减小字体以容纳更多列 */
+  min-width: 1200px; /* 确保表格有足够宽度 */
+}
+
+.modern-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.modern-table th,
+.modern-table td {
+  padding: 8px 6px; /* 减少内边距以节省空间 */
+  text-align: center;
+  border-bottom: 1px solid #ecf0f1;
+  white-space: nowrap; /* 防止文字换行 */
+  min-width: 80px; /* 设置最小列宽 */
+}
+
+.modern-table th {
+  font-weight: 600;
+  font-size: 11px; /* 表头字体稍小 */
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.modern-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.modern-table tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+/* 数值颜色 */
+.positive {
+  color: #00b894 !important;
+  font-weight: 600;
+}
+
+.negative {
+  color: #e17055 !important;
+  font-weight: 600;
+}
+
+.neutral {
+  color: #74b9ff !important;
+}
+
+/* 图标样式 */
+.icon-chart::before { content: '📈'; }
+.icon-indicator::before { content: '📊'; }
+.icon-valuation::before { content: '💹'; }
+.icon-forecast::before { content: '🔮'; }
+.icon-ai::before { content: '🤖'; }
+.icon-target::before { content: '🎯'; }
+.icon-trend-up::before { content: '📈'; }
+.icon-trend-down::before { content: '📉'; }
+.icon-financial::before { content: '💰'; }
+.icon-refresh::before { content: '🔄'; }
+.icon-rate::before { content: '💹'; }
+
+/* 财务指标独立模块 */
+.financial-section {
+  width: 100%;
+  margin-top: 30px;
+}
+
+.financial-card-full {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.financial-card-full:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+}
+
+.financial-table-wrapper-full {
+  max-height: 500px;
+  overflow: auto;
+  width: 100%;
+}
+
+.table-container-full {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #ecf0f1;
+  width: 100%;
+}
+
+.modern-table-full {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 1400px; /* 确保表格有足够宽度显示所有列 */
+}
+
+.modern-table-full thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.modern-table-full th,
+.modern-table-full td {
+  padding: 10px 8px;
+  text-align: center;
+  border-bottom: 1px solid #ecf0f1;
+  white-space: nowrap;
+  min-width: 90px; /* 设置最小列宽 */
+}
+
+.modern-table-full th {
+  font-weight: 600;
+  font-size: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.modern-table-full tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.modern-table-full tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+/* 预期收益率 - 区别于市场参考，使用不同样式 */
+.rate-card {
+  margin-top: 20px;
+  margin-bottom: 30px;
+}
+
+.rate-content {
+  padding: 20px;
+}
+
+/* 预期收益率网格 - 使用卡片式设计区别于市场参考 */
+.rate-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* 自适应列数 */
+  gap: 12px; /* 减少间距 */
+  margin-top: 20px;
+}
+
+/* 预期收益率项目 - 使用渐变背景区别于市场参考 */
+.rate-grid .rate-item {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); /* 使用渐变背景 */
+  color: white; /* 白色文字 */
+  padding: 14px; /* 减小内边距从20px到12px */
+  border-radius: 12px;
+  text-align: center; /* 确保居中对齐 */
+  border: none; /* 移除边框 */
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3);
+  transform: translateZ(0); /* 优化渲染 */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 水平居中 */
+  justify-content: center; /* 垂直居中 */
+}
+
+.rate-grid .rate-item:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(240, 147, 251, 0.4);
+}
+
+/* 预期收益率标签 - 白色文字 */
+.rate-grid .rate-period {
+  display: block;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 6px; /* 减小间距从8px到6px */
+  font-weight: 600;
+  text-align: center; /* 确保标签居中 */
+}
+
+/* 预期收益率数值 - 白色文字，强化显示 */
+.rate-grid .rate-value {
+  display: block;
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  text-align: center; /* 确保数值居中 */
+}
+
+/* 市场参考 - 保持原有的浅色设计 */
+.bond-rates .rate-item {
+  background: #f8f9fa;
+  color: #2c3e50;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  border: 2px solid #ecf0f1;
+  transition: all 0.3s ease;
+}
+
+.bond-rates .rate-period {
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+.bond-rates .rate-value {
+  color: #2c3e50;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* 通用样式保持兼容 */
+.rate-item {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 15px; /* 减少内边距 */
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  min-height: 80px; /* 减少最小高度 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.rate-item:hover {
+  border-color: #667eea;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+}
+
+.rate-period {
+  display: block;
+  font-size: 16px;
+  color: #4a5568;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.rate-value {
+  font-size: 20px; /* 适当减小字体 */
+  font-weight: 800;
+  color: #2c3e50;
+  margin-bottom: 6px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  filter: brightness(1.05);
+  border: 1px solid rgba(44, 62, 80, 0.2);
+  background: rgba(255, 255, 255, 0.8);
+  padding: 4px 8px;
+  border-radius: 6px;
+  word-break: break-all; /* 处理长数字 */
+}
+
+/* 滚动条样式 */
+.financial-table-wrapper-full::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.financial-table-wrapper-full::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 5px;
+}
+
+.financial-table-wrapper-full::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 5px;
+}
+
+.financial-table-wrapper-full::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 响应式设计 */
+/* 长数值处理 - 自动截断和格式化 */
+.rate-value.long-number,
+.prediction-value.long-number {
+  font-size: 18px; /* 较小字体适应长数值 */
+  word-break: break-all; /* 允许在任意字符处换行 */
+  line-height: 1.3;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 特殊处理超长百分比数值 */
+.percentage-long {
+  font-size: 14px !important;
+  font-family: 'Courier New', monospace; /* 使用等宽字体 */
+  letter-spacing: -0.5px; /* 紧缩字符间距 */
+  line-height: 1.2;
+  word-break: break-all;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  white-space: nowrap;
+}
+
+/* 数值格式化容器 */
+.number-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.number-main {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.number-detail {
+  font-size: 12px;
+  opacity: 0.8;
+  font-family: 'Courier New', monospace;
+}
+
+/* 卡片标题区分样式 */
+.rate-card .card-header {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); /* 与内容保持一致的渐变 */
+}
+
+.reference-section .card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* 保持原有样式 */
+}
+
+@media (max-width: 1200px) {
+  .main-content {
+    grid-template-columns: 1fr; /* 大屏幕下改为单列 */
+    gap: 20px;
+  }
+  
+  .info-panel {
+    order: -1;
+    max-width: 100%;
+    padding-right: 0;
+  }
+  
+  .forecast-card {
+    position: static;
+  }
+  
+  .prediction-cards {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* 中等屏幕双列 */
+  }
+  
+  .stock-quick-stats {
+    grid-template-columns: repeat(2, 1fr); /* 中等屏幕显示2列 */
+  }
+  
+  .modern-table-full {
+    font-size: 11px;
+  }
+  
+  .modern-table-full th,
+  .modern-table-full td {
+    padding: 8px 6px;
+    min-width: 70px;
+  }
+}
+
+@media (max-width: 768px) {
+  .stock-detail-container {
+    padding: 15px;
+  }
+  
+  .stock-header-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+  
+  .main-content {
+    gap: 15px;
+    padding: 0 10px;
+  }
+  
+  .stock-quick-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    padding: 20px;
+  }
+  
+  .stat-item {
+    padding: 10px;
+  }
+  
+  .stat-label {
+    font-size: 14px;
+    min-width: 70px;
+  }
+  
+  .stat-value {
+    font-size: 18px;
+  }
+  
+  .stat-value.price {
+    font-size: 20px;
+  }
+  
+  .chart-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .prediction-cards {
+    grid-template-columns: 1fr; /* 小屏幕单列 */
+    gap: 12px;
+  }
+  
+  .prediction-card {
+    padding: 15px;
+    min-height: 80px;
+    gap: 10px;
+  }
+  
+  .prediction-value {
+    font-size: 24px;
+  }
+  
+  .prediction-label {
+    font-size: 14px;
+  }
+  
+  .rate-grid {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+  }
+  
+  .rate-item {
+    padding: 12px;
+    min-height: 70px;
+  }
+  
+  .rate-value {
+    font-size: 18px;
+  }
+  
+  .rate-grid .rate-value {
+    font-size: 18px;
+  }
+  
+  .percentage-long {
+    font-size: 12px !important;
+  }
+  
+  .bond-rates {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .indicator-tabs {
+    justify-content: center;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .financial-section {
+    margin-top: 20px;
+  }
+  
+  .modern-table-full {
+    font-size: 10px;
+  }
+  
+  .modern-table-full th,
+  .modern-table-full td {
+    padding: 6px 4px;
+    min-width: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .stock-name {
+    font-size: 24px;
+  }
+  
+  .stock-title {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .stock-quick-stats {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 15px;
+  }
+  
+  .stat-item {
+    padding: 15px;
+    min-height: 70px;
+  }
+  
+  .prediction-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 12px;
+    gap: 8px;
+  }
+  
+  .prediction-icon {
+    font-size: 24px;
+  }
+  
+  .prediction-value {
+    font-size: 20px;
+  }
+  
+  .rate-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .financial-table-wrapper {
+    font-size: 10px;
+  }
+  
+  .modern-table th,
+  .modern-table td {
+    padding: 6px 4px;
+    min-width: 60px;
+  }
+  
+  .bond-rates {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 滚动条样式 */
+.financial-table-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.financial-table-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.financial-table-wrapper::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.financial-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 动画效果 */
+.prediction-card,
+.metric-card,
+.rate-item {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 卡片进入动画 */
+.chart-card,
+.info-card {
+  animation: slideInFromLeft 0.8s ease-out;
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 悬浮效果增强 */
+.prediction-card,
+.metric-card,
+.rate-item,
+.chart-card,
+.info-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 焦点状态 */
+.modern-select:focus,
+.modern-input:focus {
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+}
+
+/* 按钮活跃状态 */
+.fetch-btn:active,
+.analyze-btn:active,
+.indicator-tab:active {
+  transform: translateY(0);
+}
