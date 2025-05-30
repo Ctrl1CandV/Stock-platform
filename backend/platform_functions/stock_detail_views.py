@@ -104,3 +104,10 @@ def gainIntroduction(request, params, cache_manager):
     stock_code = params.get('stockCode')
     introduction = cache_manager.get_or_set(lambda: pro.stock_company(ts_code=stock_code, fields='ts_code,introduction'))["introduction"][0]
     return { 'introduction': introduction }
+
+@api_view(methods=['GET'], use_cache=True, require_token=False)
+def getBasicMetrics(request, params, cache_manager):
+    ''' 获取股票的基本指标信息 '''
+    stock_code = params.get('stockCode')
+    basic_metrics = cache_manager.get_or_set(lambda: services._get_basic_metrics(stock_code))
+    return basic_metrics

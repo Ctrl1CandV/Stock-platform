@@ -17,5 +17,6 @@ urlpatterns = [
     path("showTechnicalIndicator", stock_detail_views.showTechnicalIndicator, name="show_technical_indicator"),
     path("getFinancialMetric", stock_detail_views.getFinancialMetric, name="get_financial_metric"),
     path("gainIntroduction", stock_detail_views.gainIntroduction, name="gain_introduction"),
+    path("getBasicMetrics", stock_detail_views.getBasicMetrics, name="get_basic_metrics"), 
     path("analyse/", include("stock_analyse.urls")),
 ]

@@ -5,12 +5,12 @@
     padding: 0;
 }
 
-/* 页面主容器 */
+/* 页面主容器 - 改为白色背景 */
 .transaction-page {
     max-width: 1400px;
     margin: 0 auto;
     padding: 24px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-color: #f5f5f5;
     min-height: 100vh;
     font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
 }
@@ -20,10 +20,10 @@
     text-align: center;
     margin-bottom: 32px;
     padding: 32px 0;
-    background: rgba(255, 255, 255, 0.95);
+    background: #fff;
     border-radius: 20px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .page-title {
@@ -39,6 +39,7 @@
 
 .icon-chart {
     font-size: 36px;
+    color: #667eea;
     animation: pulse 2s infinite;
 }
 
@@ -54,12 +55,12 @@
 }
 
 .chart-container {
-    background: rgba(255, 255, 255, 0.95);
+    background: #fff;
     border-radius: 20px;
     padding: 24px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
     transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .chart-container:hover {
@@ -132,28 +133,24 @@
 /* 搜索区域 */
 .search-section {
     margin-bottom: 32px;
-    animation: fadeIn 0.5s ease-out;
-}
-
-.search-container {
-    background: rgba(255, 255, 255, 0.98);
+    background: #fff;
     border-radius: 16px;
     padding: 28px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.05);
     position: relative;
     overflow: hidden;
+    animation: fadeIn 0.5s ease-out;
 }
 
-.search-container::before {
+.search-section::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 4px;
-    background: linear-gradient(90deg, #3498db, #9b59b6, #e74c3c);
+    background: linear-gradient(90deg, #667eea, #764ba2);
     background-size: 200% 100%;
     animation: gradientMove 3s ease infinite;
 }
@@ -189,25 +186,137 @@
     align-items: center;
     gap: 10px;
     margin: 0;
+    white-space: nowrap; /* 确保标题在同一行 */
 }
 
 .icon-search {
     font-size: 22px;
-    color: #3498db;
+    color: #667eea;
     animation: pulse 2s infinite;
+    flex-shrink: 0; /* 防止图标被压缩 */
+    /* 移除固定宽度 width: 100px */
 }
 
+/* 搜索控制区域 - 重新优化布局 */
 .search-controls {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 24px;
-    align-items: end;
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    width: 100%;
+    position: relative;
+    padding-right: 140px; /* 为重置按钮留出空间 */
 }
 
 .control-group {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+/* 搜索类型固定宽度 */
+.search-type-group {
+    flex: 0 0 180px;
+}
+
+/* 中间的输入区域自适应 */
+.control-group:nth-child(2) {
+    flex: 1;
+    min-width: 200px;
+    max-width: 300px;
+}
+
+/* 按钮组 - 绝对定位到最右侧 */
+.button-group {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+/* 搜索按钮 - 位于交易类型选择框右侧下方 */
+.button-group .search-btn {
+    width: 120px;
+    height: 52px;
+    /* 计算位置：搜索类型宽度180px + gap 20px = 200px */
+    position: absolute;
+    left: -260px; /* 调整到交易类型选择框右侧 */
+    bottom: 0;
+}
+
+/* 重置按钮 - 最右侧 */
+.button-group .reset-btn {
+    width: 120px;
+    height: 52px;
+    position: relative;
+}
+
+/* 响应式调整 */
+@media (max-width: 1024px) {
+    .search-controls {
+        flex-wrap: wrap;
+        padding-right: 0;
+        position: static;
+    }
+    
+    .search-type-group {
+        flex: 0 0 calc(50% - 10px);
+    }
+    
+    .control-group:nth-child(2) {
+        flex: 0 0 calc(50% - 10px);
+    }
+    
+    .button-group {
+        position: static;
+        flex: 0 0 100%;
+        margin-top: 16px;
+        justify-content: space-between;
+    }
+    
+    .button-group .search-btn {
+        position: static;
+        flex: 1;
+        max-width: calc(50% - 6px);
+        left: auto;
+    }
+    
+    .button-group .reset-btn {
+        position: static;
+        flex: 1;
+        max-width: calc(50% - 6px);
+    }
+}
+
+@media (max-width: 768px) {
+    .search-section {
+        padding: 20px;
+    }
+    
+    .search-controls {
+        flex-direction: column;
+        gap: 16px;
+        padding-right: 0;
+    }
+    
+    .control-group,
+    .search-type-group {
+        flex: none;
+        width: 100%;
+    }
+    
+    .button-group {
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+    }
+    
+    .button-group .search-btn,
+    .button-group .reset-btn {
+        width: 100%;
+        max-width: none;
+    }
 }
 
 .control-label {
@@ -224,7 +333,7 @@
     content: '';
     height: 2px;
     flex-grow: 1;
-    background: linear-gradient(90deg, rgba(52, 152, 219, 0.2), transparent);
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.2), transparent);
     border-radius: 2px;
 }
 
@@ -251,8 +360,8 @@
 
 .search-select:focus {
     outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.15);
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
     transform: translateY(-2px);
 }
 
@@ -268,7 +377,7 @@
 }
 
 .search-select:focus+.select-arrow {
-    color: #3498db;
+    color: #667eea;
     transform: translateY(-50%) rotate(180deg);
 }
 
@@ -294,8 +403,8 @@
 
 .search-input:focus {
     outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.15);
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
     transform: translateY(-2px);
 }
 
@@ -327,11 +436,6 @@
 }
 
 /* 按钮样式 */
-.button-group {
-    display: flex;
-    gap: 12px;
-    margin-top: 6px;
-}
 
 .search-btn,
 .reset-btn {
@@ -351,20 +455,20 @@
 }
 
 .search-btn {
-    background: linear-gradient(135deg, #3498db 0%, #9b59b6 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    box-shadow: 0 6px 15px rgba(52, 152, 219, 0.3);
+    box-shadow: 0 6px 15px rgba(102, 126, 234, 0.3);
 }
 
 .search-btn:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
-    background: linear-gradient(135deg, #2980b9 0%, #8e44ad 100%);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a42a0 100%);
 }
 
 .search-btn:active {
     transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
 }
 
 .reset-btn {
@@ -408,15 +512,15 @@
 }
 
 .stat-card {
-    background: rgba(255, 255, 255, 0.95);
+    background: #fff;
     border-radius: 16px;
     padding: 24px;
     display: flex;
     align-items: center;
     gap: 16px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    backdrop-filter: blur(10px);
     transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .stat-card:hover {
@@ -469,26 +573,32 @@
 
 .section-header {
     margin-bottom: 24px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .section-title {
     font-size: 20px;
     font-weight: 600;
-    color: #fff;
+    color: #2c3e50;
     display: flex;
     align-items: center;
     gap: 8px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    margin-bottom: 8px;
 }
 
 .icon-list {
     font-size: 22px;
+    color: #667eea;
 }
 
 .record-count {
     font-size: 16px;
     font-weight: 400;
-    color: rgba(255, 255, 255, 0.8);
+    color: #7f8c8d;
 }
 
 /* 交易记录列表 */
@@ -499,13 +609,12 @@
 }
 
 .transaction-item {
-    background: rgba(255, 255, 255, 0.95);
+    background: #fff;
     border-radius: 16px;
     padding: 20px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    backdrop-filter: blur(10px);
     transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(0, 0, 0, 0.05);
     position: relative;
     overflow: hidden;
 }
@@ -640,15 +749,17 @@
 .empty-state {
     text-align: center;
     padding: 60px 20px;
-    background: rgba(255, 255, 255, 0.95);
+    background: #fff;
     border-radius: 20px;
-    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .empty-icon {
     font-size: 64px;
     margin-bottom: 16px;
     opacity: 0.6;
+    color: #95a5a6;
 }
 
 .empty-text {
@@ -671,10 +782,10 @@
     gap: 12px;
     margin-top: 32px;
     padding: 20px;
-    background: rgba(255, 255, 255, 0.95);
+    background: #fff;
     border-radius: 16px;
-    backdrop-filter: blur(10px);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .pagination-btn {
@@ -719,25 +830,27 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: rgba(255, 255, 255, 0.8);
+    background: #f8f9fa;
     color: #6c757d;
+    border: 1px solid #e9ecef;
 }
 
 .page-number:hover {
     background: rgba(102, 126, 234, 0.1);
     color: #667eea;
     transform: translateY(-1px);
+    border-color: #667eea;
 }
 
 .page-number.active {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    border-color: transparent;
 }
 
 /* 动画效果 */
 @keyframes pulse {
-
     0%,
     100% {
         transform: scale(1);
@@ -769,6 +882,16 @@
     to {
         opacity: 1;
         transform: translateX(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
     }
 }
 
@@ -838,10 +961,6 @@
         justify-content: center;
     }
 
-    .search-container {
-        padding: 20px;
-    }
-
     .search-controls {
         grid-template-columns: 1fr;
         gap: 16px;
@@ -868,8 +987,7 @@
         padding: 20px 16px;
     }
 
-    .chart-container,
-    .search-container {
+    .chart-container {
         padding: 16px;
     }
 
@@ -884,48 +1002,23 @@
     }
 }
 
-/* 深色模式支持 */
-@media (prefers-color-scheme: dark) {
-    .transaction-page {
-        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-    }
+/* 滚动条样式 */
+::-webkit-scrollbar {
+    width: 8px;
+}
 
-    .page-header,
-    .chart-container,
-    .search-container,
-    .transaction-item,
-    .pagination {
-        background: rgba(52, 73, 94, 0.95);
-        color: #ecf0f1;
-    }
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
 
-    .page-title,
-    .chart-title,
-    .search-title {
-        color: #ecf0f1;
-    }
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 4px;
+}
 
-    .control-label,
-    .detail-label {
-        color: #bdc3c7;
-    }
-
-    .search-select,
-    .search-input {
-        background: #34495e;
-        color: #ecf0f1;
-        border-color: #4a5f7a;
-    }
-
-    .stock-info {
-        background: #2c3e50;
-    }
-
-    .stock-code {
-        background: #34495e;
-        color: #ecf0f1;
-        border-color: #4a5f7a;
-    }
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #5a6fd8, #6a42a0);
 }
 
 /* 打印样式 */

@@ -19,7 +19,7 @@
         <div class="stat-item">
           <span class="stat-label">涨跌幅</span>
           <span class="stat-value change" :class="priceChangePercent >= 0 ? 'positive' : 'negative'">
-            {{ priceChangePercent >= 0 ? '+' : '' }}{{ priceChangePercent.toFixed(2) }}%
+            {{ priceChangePercent >= 0 ? '+' : '' }}{{ priceChangePercent.toFixed(4) }}%
           </span>
         </div>
         <div class="stat-item">
@@ -28,11 +28,11 @@
         </div>
         <div class="stat-item">
           <span class="stat-label">成交量</span>
-          <span class="stat-value volume">{{ volume.toFixed(1) }}万手</span>
+          <span class="stat-value volume">{{ volume.toFixed(1) }}手</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">市值</span>
-          <span class="stat-value market-cap">{{ marketCap.toFixed(1) }}亿</span>
+          <span class="stat-value market-cap">{{ marketCap.toFixed(1) }}万</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">市盈率</span>
@@ -314,13 +314,12 @@ export default {
       stockIntroduction: '',
 
       // 新增：顶部股票统计数据（样例数据）
-      currentPrice: 45.67,
-      priceChange: 2.34,
-      priceChangePercent: 5.41,
-      openPrice: 43.89,
-      volume: 1256.8, // 万手
-      marketCap: 892.5, // 亿
-      peRatio: 18.6,
+      currentPrice: 0,
+      priceChangePercent: 0,
+      openPrice: 0,
+      volume: 0,
+      marketCap: 0,
+      peRatio: 0,
 
       fetchStockData() {
         // 获取股票基础数据的方法
@@ -388,6 +387,25 @@ export default {
           this.stockIntroduction = response.data.introduction;
         } else if (response.data.status === 'ERROR') {
           this.$message.error('公司简介获取失败:' + response.data.errorMessage);
+        }
+      } catch (error) {
+        alert(error.message);
+      }
+    },
+    async getBasicMetrics() {
+      try {
+        const response = await this.$axios.get('/platform/getBasicMetrics', {
+          params: { stockCode: this.stockCode }
+        });
+        if (response.data.status === 'SUCCESS') {
+          this.currentPrice = response.data.price;
+          this.priceChangePercent = response.data.change_percent;
+          this.openPrice = response.data.open;
+          this.volume = response.data.volume;
+          this.marketCap = response.data.total_mv;
+          this.peRatio = response.data.pe;
+        } else if (response.data.status === 'ERROR') {
+          this.$message.error('股票基础指标获取失败:' + response.data.errorMessage);
         }
       } catch (error) {
         alert(error.message);
@@ -841,7 +859,6 @@ export default {
         this.loadingValuation = false;
       }
     },
-
     drawValuationChart() {
       if (!this.valuationData || this.valuationData.length === 0) {
         console.warn('估值数据为空，无法绘制图表');
@@ -1046,6 +1063,7 @@ export default {
   },
   async mounted() {
     await this.getIntroduction();
+    await this.getBasicMetrics();
     await this.getStockQurve();
     await this.getTechnicalIndicator();
     await this.getFinancialMetric();

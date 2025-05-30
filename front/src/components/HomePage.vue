@@ -1,100 +1,259 @@
 <template>
-  <div class="stock-page">
-    <!-- 搜索区域 -->
-    <div class="search-container">
-      <div class="search-section">
-        <select v-model="searchType">
-          <option value="code">股票代码</option>
-          <option value="name">股票名称</option>
-        </select>
-        <input type="text" v-model="searchKeyword" placeholder="输入搜索关键词">
-        <button @click="searchStocks">搜索</button>
-      </div>
-    </div>
-
-    <!-- 股票列表 -->
-    <div class="stock-list">
-      <div v-for="stock in paginatedStocks" :key="stock.code" class="stock-item">
-        <div class="stock-info">
-          <p v-if="stock.stockCode && stock.stockName">名称:{{ stock.stockName }} 代码:{{ stock.stockCode }}</p>
-          <p v-if="stock.industry && stock.area">行业:{{ stock.industry }} 地域:{{ stock.area }}</p>
-          <p v-if="stock.listDate">上市时间:{{ stock.listDate }} <button v-if="!isManager"
-              @click="addFavoriteStock(stock.stockCode)" class="favorite-btn">加入自选股</button></p>
+  <div class="stock-platform">
+    <!-- 顶部导航栏 -->
+    <div class="top-header">
+      <div class="header-content">
+        <div class="platform-title">
+          <h1>智能股票交易平台</h1>
+          <span class="subtitle">专业 · 安全 · 高效</span>
         </div>
-        <div class="stock-actions">
-          <button v-if="!isManager" @click="openBuyModal(stock)">买入</button>
-          <button @click="toStock(stock)">详情</button>
+        <div class="market-status">
+          <div class="status-indicator active"></div>
+          <span>市场开放中</span>
         </div>
       </div>
     </div>
 
-    <!-- 分页控件 -->
-    <div class="pagination" v-if="totalPages > 1">
-      <button :disabled="currentPage === 1" @click="currentPage--"
-        :class="{ 'disabled': currentPage === 1 }">上一页</button>
-      <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
-      <button :disabled="currentPage === totalPages" @click="currentPage++"
-        :class="{ 'disabled': currentPage === totalPages }">下一页</button>
-    </div>
-
-    <!-- 市场数据展示区域 -->
-    <div class="market-data-container" v-if="Object.keys(significantIndex).length > 0">
-      <!-- 指数信息 -->
-      <div class="index-container">
-        <h3>市场指数</h3>
-        <div class="index-list">
-          <div v-for="(value, name) in significantIndex" :key="name" class="index-item"
-            :class="{ 'positive': value > 0, 'negative': value < 0 }">
-            <span class="index-name">{{ name }}</span>
-            <span class="index-value">{{ value > 0 ? '+' : '' }}{{ value }}%</span>
+    <!-- 主要内容区域 -->
+    <div class="main-container">
+      <!-- 左侧面板 -->
+      <div class="left-panel">
+        <!-- 搜索区域 -->
+        <div class="search-panel">
+          <div class="panel-header">
+            <h3>股票搜索</h3>
+            <div class="header-line"></div>
           </div>
-        </div>
-      </div>
-
-      <!-- 交易前十 -->
-      <div class="top-stocks-container"
-        v-if="Object.keys(ShanghaiTop10).length > 0 && Object.keys(ShenzhenTop10).length > 0">
-        <div class="top-stocks-section">
-          <h3>沪市交易前十</h3>
-          <div class="top-stocks-list">
-            <div v-for="(amount, name) in ShanghaiTop10" :key="name" class="top-stock-item">
-              <span class="stock-name">{{ name }}</span>
-              <span class="stock-amount">{{ amount }}</span>
+          <div class="search-form">
+            <div class="search-type-selector">
+              <button :class="['type-btn', { active: searchType === 'code' }]" @click="searchType = 'code'">
+                <i class="icon-code"></i>
+                股票代码
+              </button>
+              <button :class="['type-btn', { active: searchType === 'name' }]" @click="searchType = 'name'">
+                <i class="icon-name"></i>
+                股票名称
+              </button>
+            </div>
+            <div class="search-input-group">
+              <input type="text" v-model="searchKeyword" :placeholder="searchType === 'code' ? '请输入股票代码' : '请输入股票名称'"
+                class="search-input" @keyup.enter="searchStocks">
+              <button @click="searchStocks" class="search-btn">
+                <i class="icon-search"></i>
+                搜索
+              </button>
             </div>
           </div>
         </div>
-        <div class="top-stocks-section">
-          <h3>深市交易前十</h3>
-          <div class="top-stocks-list">
-            <div v-for="(amount, name) in ShenzhenTop10" :key="name" class="top-stock-item">
-              <span class="stock-name">{{ name }}</span>
-              <span class="stock-amount">{{ amount }}</span>
+
+        <!-- 市场指数面板 -->
+        <div class="index-panel" v-if="Object.keys(significantIndex).length > 0">
+          <div class="panel-header">
+            <h3>市场指数</h3>
+            <div class="header-line"></div>
+          </div>
+          <div class="index-grid">
+            <div v-for="(value, name) in significantIndex" :key="name" class="index-card"
+              :class="{ 'positive': value > 0, 'negative': value < 0 }">
+              <div class="index-name">{{ name }}</div>
+              <div class="index-value">
+                <span class="value-number">{{ Math.abs(value).toFixed(2) }}%</span>
+                <i :class="value > 0 ? 'icon-up' : 'icon-down'"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 财经资讯 -->
+        <div class="news-panel" v-if="Object.keys(newsInformation).length > 0">
+          <div class="panel-header">
+            <h3>财经资讯</h3>
+            <div class="header-line"></div>
+          </div>
+
+          <div class="news-list">
+            <div v-for="(content, datetime) in newsInformation" :key="datetime" class="news-item">
+              <div class="news-time">
+                <i class="icon-time"></i>
+                {{ datetime }}
+              </div>
+              <div class="news-content">{{ content }}</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 新闻信息 -->
-      <div class="news-container">
-        <h3>最新财经动态</h3>
-        <div class="news-list">
-          <div v-for="(content, datetime) in newsInformation" :key="datetime" class="news-item">
-            <div class="news-time">{{ datetime }}</div>
-            <div class="news-content">{{ content }}</div>
+      <!-- 中间主内容区 -->
+      <div class="center-panel">
+        <!-- 股票列表 -->
+        <div class="stock-list-panel">
+          <div class="panel-header">
+            <h3>股票列表</h3>
+            <div class="header-actions">
+              <span class="result-count" v-if="stockList.length > 0">
+                共找到 {{ stockList.length }} 只股票
+              </span>
+            </div>
+          </div>
+
+          <div class="stock-grid" v-if="stockList.length > 0">
+            <div v-for="stock in paginatedStocks" :key="stock.stockCode" class="stock-card">
+              <div class="stock-header">
+                <div class="stock-basic-info">
+                  <h4 class="stock-name">{{ stock.stockName }}</h4>
+                  <span class="stock-code">{{ stock.stockCode }}</span>
+                </div>
+                <div class="stock-actions">
+                  <button v-if="!isManager" @click="addFavoriteStock(stock.stockCode)" class="action-btn favorite-btn"
+                    title="加入自选股">
+                    <i class="icon-star"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="stock-details">
+                <div class="detail-row" v-if="stock.industry">
+                  <span class="label">行业:</span>
+                  <span class="value">{{ stock.industry }}</span>
+                </div>
+                <div class="detail-row" v-if="stock.area">
+                  <span class="label">地域:</span>
+                  <span class="value">{{ stock.area }}</span>
+                </div>
+                <div class="detail-row" v-if="stock.listDate">
+                  <span class="label">上市:</span>
+                  <span class="value">{{ stock.listDate }}</span>
+                </div>
+              </div>
+
+              <div class="stock-footer">
+                <button v-if="!isManager" @click="openBuyModal(stock)" class="primary-btn buy-btn">
+                  <i class="icon-buy"></i>
+                  买入
+                </button>
+                <button @click="toStock(stock)" class="secondary-btn detail-btn">
+                  <i class="icon-chart"></i>
+                  详情
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 空状态 -->
+          <div v-else class="empty-state">
+            <div class="empty-icon">
+              <i class="icon-empty"></i>
+            </div>
+            <h4>暂无股票数据</h4>
+            <p>请使用上方搜索功能查找股票</p>
+          </div>
+
+          <!-- 分页器 -->
+          <div class="pagination-wrapper" v-if="totalPages > 1">
+            <div class="pagination">
+              <button :disabled="currentPage === 1" @click="currentPage--" class="page-btn"
+                :class="{ disabled: currentPage === 1 }">
+                <i class="icon-prev"></i>
+                上一页
+              </button>
+
+              <div class="page-numbers">
+                <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+              </div>
+
+              <button :disabled="currentPage === totalPages" @click="currentPage++" class="page-btn"
+                :class="{ disabled: currentPage === totalPages }">
+                下一页
+                <i class="icon-next"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧信息面板 -->
+      <div class="right-panel">
+        <!-- 交易排行榜 -->
+        <div class="ranking-panel"
+          v-if="Object.keys(ShanghaiTop10).length > 0 || Object.keys(ShenzhenTop10).length > 0">
+          <div class="panel-header">
+            <h3>交易排行</h3>
+            <div class="header-line"></div>
+          </div>
+
+          <div class="ranking-tabs">
+            <button :class="['tab-btn', { active: activeRankingTab === 'shanghai' }]"
+              @click="activeRankingTab = 'shanghai'">
+              沪市TOP10
+            </button>
+            <button :class="['tab-btn', { active: activeRankingTab === 'shenzhen' }]"
+              @click="activeRankingTab = 'shenzhen'">
+              深市TOP10
+            </button>
+          </div>
+
+          <div class="ranking-list">
+            <div v-for="(amount, name, index) in (activeRankingTab === 'shanghai' ? ShanghaiTop10 : ShenzhenTop10)"
+              :key="name" class="ranking-item">
+              <div class="rank-number" :class="`rank-${index + 1}`">
+                {{ index + 1 }}
+              </div>
+              <div class="stock-info">
+                <div class="stock-name">{{ name }}</div>
+                <div class="trade-amount">{{ amount }}</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
     <!-- 买入模态窗口 -->
-    <div v-if="showBuyModal" class="modal-mask">
-      <div class="modal-content">
-        <h3>{{ currentStock.stockName }} ({{ currentStock.stockCode }})</h3>
-        <p>最新价格:{{ currentPrice }}</p>
-        <input type="number" v-model.number="buyQuantity" placeholder="输入购买数量">
-        <div class="modal-actions">
-          <button @click="confirmBuy">确认</button>
-          <button @click="showBuyModal = false">取消</button>
+    <div v-if="showBuyModal" class="modal-overlay" @click="showBuyModal = false">
+      <div class="modal-container" @click.stop>
+        <div class="modal-header">
+          <h3>股票买入</h3>
+          <button @click="showBuyModal = false" class="close-btn">
+            <i class="icon-close"></i>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="stock-info-display">
+            <div class="stock-name-code">
+              <h4>{{ currentStock.stockName }}</h4>
+              <span class="code">({{ currentStock.stockCode }})</span>
+            </div>
+            <div class="current-price">
+              <span class="price-label">最新价格:</span>
+              <span class="price-value">¥{{ currentPrice }}</span>
+            </div>
+          </div>
+
+          <div class="buy-form">
+            <div class="form-group">
+              <label>购买数量</label>
+              <div class="input-with-unit">
+                <input type="number" v-model.number="buyQuantity" placeholder="请输入购买数量" class="quantity-input" min="1">
+                <span class="unit">股</span>
+              </div>
+            </div>
+
+            <div class="estimated-cost" v-if="buyQuantity > 0 && currentPrice">
+              <span class="cost-label">预估金额:</span>
+              <span class="cost-value">¥{{ (buyQuantity * currentPrice).toFixed(2) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button @click="showBuyModal = false" class="cancel-btn">
+            取消
+          </button>
+          <button @click="confirmBuy" class="confirm-btn">
+            <i class="icon-buy"></i>
+            确认买入
+          </button>
         </div>
       </div>
     </div>
@@ -102,771 +261,316 @@
 </template>
 
 <script>
+import '@/css/HomePage.css';
+
 export default {
-  name: 'StockPage',
+  name: 'StockHomePage',
   data() {
     return {
+      // 搜索相关
       searchType: 'code',
       searchKeyword: '',
+
+      // 股票数据
       stockList: [],
+
+      // 分页相关
+      currentPage: 1,
+      itemsPerPage: 12,
+
+      // 买入模态窗口
       showBuyModal: false,
       currentStock: {},
       currentPrice: null,
-      buyQuantity: 0,
-      currentPage: 1,
-      itemsPerPage: 9,
+      buyQuantity: 1,
+
+      // 市场数据
       ShanghaiTop10: {},
       ShenzhenTop10: {},
       newsInformation: {},
       significantIndex: {},
+
+      // UI状态
+      activeRankingTab: 'shanghai',
       isManager: false,
+
+      // 加载状态
+      isLoading: false,
+      searchLoading: false
     }
   },
+
   async mounted() {
-    this.loadHomePageData();
-    this.checkUserRole();
+    await this.initializePage();
   },
+
   computed: {
-    // 计算当前页显示的股票
+    // 分页计算
     paginatedStocks() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
       return this.stockList.slice(start, end);
     },
-    // 计算总页数
+
+    // 总页数
     totalPages() {
       return Math.ceil(this.stockList.length / this.itemsPerPage);
+    },
+
+    // 搜索占位符
+    searchPlaceholder() {
+      return this.searchType === 'code' ? '请输入股票代码，如：000001' : '请输入股票名称，如：平安银行';
     }
   },
+
+  watch: {
+    // 监听搜索类型变化，清空搜索关键词
+    searchType() {
+      this.searchKeyword = '';
+    },
+
+    // 监听股票列表变化，重置到第一页
+    stockList() {
+      this.currentPage = 1;
+    }
+  },
+
   methods: {
+    // 页面初始化
+    async initializePage() {
+      this.isLoading = true;
+      try {
+        await Promise.all([
+          this.loadHomePageData(),
+          this.checkUserRole()
+        ]);
+      } catch (error) {
+        console.error('页面初始化失败:', error);
+        this.$message.error('页面加载失败，请刷新重试');
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    // 检查用户角色
     checkUserRole() {
       const currentPath = this.$route.path;
       const managerID = localStorage.getItem('managerID');
       this.isManager = currentPath.startsWith('/manager') || (managerID != null);
     },
+
+    // 加载首页数据
     async loadHomePageData() {
       try {
         const response = await this.$axios.get('/platform/loadHomePageData');
 
         if (response.data.status === 'SUCCESS') {
-          this.ShanghaiTop10 = response.data.ShanghaiTop10;
-          this.ShenzhenTop10 = response.data.ShenzhenTop10;
-          this.newsInformation = response.data.newsInformation;
-          this.significantIndex = response.data.significantIndex;
+          this.ShanghaiTop10 = response.data.ShanghaiTop10 || {};
+          this.ShenzhenTop10 = response.data.ShenzhenTop10 || {};
+          this.newsInformation = response.data.newsInformation || {};
+          this.significantIndex = response.data.significantIndex || {};
+          console.log("new:" + this.newsInformation);
         } else {
-          this.$message.error('搜索页面加载失败: ' + response.data.errorMessage);
+          throw new Error(response.data.errorMessage || '数据加载失败');
         }
       } catch (error) {
-        alert('请求失败: ' + error.message);
+        console.error('加载首页数据失败:', error);
+        this.$message.error('市场数据加载失败: ' + error.message);
       }
     },
+
+    // 搜索股票
+    async searchStocks() {
+      if (!this.searchKeyword.trim()) {
+        this.$message.warning('请输入搜索关键词');
+        return;
+      }
+
+      this.searchLoading = true;
+
+      try {
+        let response;
+
+        if (this.searchType === 'code') {
+          response = await this.$axios.get('/platform/queryStockByCode', {
+            params: { stockCode: this.searchKeyword.trim() }
+          });
+
+          if (response.data.status === 'SUCCESS') {
+            // 单个股票结果转换为数组
+            this.stockList = response.data.stockInformation ? [response.data.stockInformation] : [];
+          } else {
+            throw new Error(response.data.errorMessage || '查询失败');
+          }
+        } else if (this.searchType === 'name') {
+          response = await this.$axios.get('/platform/queryStockByName', {
+            params: { stockName: this.searchKeyword.trim() }
+          });
+
+          if (response.data.status === 'SUCCESS') {
+            this.stockList = response.data.stockInformationList || [];
+          } else {
+            throw new Error(response.data.errorMessage || '查询失败');
+          }
+        }
+
+        if (this.stockList.length === 0) {
+          this.$message.info('未找到相关股票，请尝试其他关键词');
+        } else {
+          this.$message.success(`找到 ${this.stockList.length} 只相关股票`);
+        }
+
+      } catch (error) {
+        console.error('搜索失败:', error);
+        this.$message.error('搜索失败: ' + error.message);
+        this.stockList = [];
+      } finally {
+        this.searchLoading = false;
+      }
+    },
+
+    // 添加自选股
     async addFavoriteStock(stockCode) {
+      const userID = localStorage.getItem('userID');
+      if (!userID) {
+        this.$message.warning('请先登录');
+        return;
+      }
+
       try {
         const response = await this.$axios.post('/platform/addFavoriteStock', {
-          userID: localStorage.getItem('userID'),
+          userID: userID,
           stockCode: stockCode
         });
 
         if (response.data.status === 'SUCCESS') {
-          this.$message.success('添加自选股成功');
+          this.$message.success('已添加到自选股');
         } else {
-          this.$message.error('添加自选股失败: ' + response.data.errorMessage);
+          throw new Error(response.data.errorMessage || '添加失败');
         }
       } catch (error) {
-        alert('请求失败: ' + error.message);
+        console.error('添加自选股失败:', error);
+        this.$message.error('添加自选股失败: ' + error.message);
       }
     },
+
+    // 跳转到股票详情
     async toStock(stock) {
-      // 更新数据
       try {
-        const response = await this.$axios.post('/platform/updateAnnualDailyQuotes', { stockCode: stock.stockCode });
+        // 更新股票数据
+        const response = await this.$axios.post('/platform/updateAnnualDailyQuotes', {
+          stockCode: stock.stockCode
+        });
+
         if (response.data.status === 'SUCCESS') {
+          // 保存股票信息到本地存储
+          localStorage.setItem('stockCode', stock.stockCode);
+          localStorage.setItem('stockName', stock.stockName);
+
+          // 跳转到股票详情页
           if (this.$route.path !== '/user/stock') {
             this.$router.push('/user/stock');
           }
-          localStorage.setItem('stockCode', stock.stockCode);
-          localStorage.setItem('stockName', stock.stockName);
         } else {
-          this.$message.error('跳转失败: ' + response.data.errorMessage);
+          throw new Error(response.data.errorMessage || '跳转失败');
         }
       } catch (error) {
-        alert('请求失败: ' + error.message);
+        console.error('跳转失败:', error);
+        this.$message.error('跳转失败: ' + error.message);
       }
     },
-    async searchStocks() {
-      try {
-        if (!this.searchKeyword) {
-          this.$message.warning("关键词不得为空");
-          return null;
-        }
 
-        if (this.searchType === 'code') {
-          const response = await this.$axios.get('/platform/queryStockByCode', {
-            params: { stockCode: this.searchKeyword }
-          });
-          if (response.data.status === 'SUCCESS') {
-            this.stockList = response.data.stockInformation;
-            this.currentPage = 1;
-          } else if (response.data.status === 'ERROR') {
-            this.$message.error("查询失败:" + response.data.errorMessage);
-          }
-        } else if (this.searchType === 'name') {
-          const response = await this.$axios.get('/platform/queryStockByName', {
-            params: { stockName: this.searchKeyword }
-          });
-          if (response.data.status === 'SUCCESS') {
-            this.stockList = response.data.stockInformationList;
-            this.currentPage = 1;
-          } else if (response.data.status === 'ERROR') {
-            this.$message.error("查询失败:" + response.data.errorMessage);
-          }
-        }
-      } catch (error) {
-        alert(error.message);
-      }
-    },
+    // 打开买入模态窗口
     async openBuyModal(stock) {
       try {
         const response = await this.$axios.get('/platform/isTrading', {
           params: { stockCode: stock.stockCode }
         });
+
         if (response.data.status === 'SUCCESS') {
           this.currentStock = stock;
           this.currentPrice = response.data.perPrice;
+          this.buyQuantity = 1;
           this.showBuyModal = true;
-        } else if (response.data.status === 'ERROR') {
-          this.$message.warning(response.data.errorMessage);
+        } else {
+          this.$message.warning(response.data.errorMessage || '当前不可交易');
         }
       } catch (error) {
-        alert(error.message);
+        console.error('获取交易信息失败:', error);
+        this.$message.error('获取交易信息失败: ' + error.message);
       }
     },
+
+    // 确认买入
     async confirmBuy() {
       const userID = localStorage.getItem('userID');
       if (!userID) {
-        this.$message.warning('当前身份信息错误，无法购买');
-        return null;
+        this.$message.warning('请先登录');
+        return;
       }
 
-      if (this.buyQuantity <= 0) {
-        this.$message.warning('无效的买入金额');
-        return null;
+      if (!this.buyQuantity || this.buyQuantity <= 0) {
+        this.$message.warning('请输入有效的购买数量');
+        return;
       }
 
       try {
+        // 确认对话框
         await this.$confirm(
-          `确认买入${this.currentStock.stockName}股票${this.buyQuantity}支吗？`,
-          '提示',
+          `确认买入 ${this.currentStock.stockName} ${this.buyQuantity} 股？\n预估金额：¥${(this.buyQuantity * this.currentPrice).toFixed(2)}`,
+          '确认买入',
           {
-            confirmButtonText: '确定',
+            confirmButtonText: '确认买入',
             cancelButtonText: '取消',
             type: 'warning'
           }
         );
-      } catch { return null; }
 
-      try {
+        // 执行买入
         const response = await this.$axios.post('/platform/buyStock', {
           userID: userID,
           stockCode: this.currentStock.stockCode,
           buyNumber: this.buyQuantity
         });
+
         if (response.data.status === 'SUCCESS') {
-          this.$message.success('买入成功，购买金额为' + response.data.amountSpent);
+          this.$message.success(`买入成功！实际金额：¥${response.data.amountSpent}`);
           this.showBuyModal = false;
-        } else if (response.data.status === 'ERROR') {
-          this.$message.error('买入失败:' + response.data.errorMessage);
+          this.resetBuyForm();
+        } else {
+          throw new Error(response.data.errorMessage || '买入失败');
         }
       } catch (error) {
-        alert(error.message);
+        if (error !== 'cancel') {
+          console.error('买入失败:', error);
+          this.$message.error('买入失败: ' + error.message);
+        }
       }
+    },
+
+    // 重置买入表单
+    resetBuyForm() {
+      this.currentStock = {};
+      this.currentPrice = null;
+      this.buyQuantity = 1;
+    },
+
+    // 格式化数字
+    formatNumber(num) {
+      if (num >= 100000000) {
+        return (num / 100000000).toFixed(1) + '亿';
+      } else if (num >= 10000) {
+        return (num / 10000).toFixed(1) + '万';
+      }
+      return num.toString();
+    },
+
+    // 格式化日期
+    formatDate(dateStr) {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('zh-CN');
     }
   }
 }
 </script>
-
-<style scoped>
-/* 样式基础 */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: 'Microsoft YaHei', Arial, sans-serif;
-  background-color: #f5f5f5;
-  color: #333;
-  line-height: 1.6;
-}
-
-.stock-page {
-  max-width: 1200px;
-  margin: 20px auto;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-.search-container {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  padding: 20px 0 30px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-/* 市场数据展示区域样式 */
-.market-data-container {
-  margin-bottom: 40px;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 25px;
-}
-
-.section-title {
-  margin-bottom: 20px;
-  color: #333;
-  font-size: 22px;
-  font-weight: 600;
-  border-bottom: 2px solid #eee;
-  padding-bottom: 12px;
-}
-
-/* 指数信息样式 */
-.index-container {
-  background-color: #f9f9f9;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.index-container:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-}
-
-.index-container h3 {
-  margin-bottom: 20px;
-  color: #333;
-  font-size: 20px;
-  font-weight: 600;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 12px;
-}
-
-.index-list {
-  display: flex;
-  justify-content: space-around;
-  flex-wrap: wrap;
-}
-
-.index-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 15px 20px;
-  border-radius: 10px;
-  min-width: 150px;
-  margin: 8px;
-  background-color: #fff;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s ease;
-}
-
-.index-item:hover {
-  transform: scale(1.05);
-}
-
-.index-name {
-  font-weight: bold;
-  margin-bottom: 10px;
-  font-size: 16px;
-}
-
-.index-value {
-  font-size: 22px;
-  font-weight: 600;
-}
-
-.positive {
-  color: #f56c6c;
-}
-
-.negative {
-  color: #67c23a;
-}
-
-/* 交易前十样式 */
-.top-stocks-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 25px;
-}
-
-.top-stocks-section {
-  background-color: #f9f9f9;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.top-stocks-section:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-}
-
-.top-stocks-section h3 {
-  margin-bottom: 20px;
-  color: #333;
-  font-size: 20px;
-  font-weight: 600;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 12px;
-}
-
-.top-stocks-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.top-stock-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px 15px;
-  border-bottom: 1px dashed #eee;
-  transition: background-color 0.2s ease;
-}
-
-.top-stock-item:hover {
-  background-color: #f0f7ff;
-}
-
-.top-stock-item:last-child {
-  border-bottom: none;
-}
-
-.stock-name {
-  font-weight: bold;
-  font-size: 15px;
-}
-
-.stock-amount {
-  color: #409eff;
-  font-weight: 600;
-  font-size: 15px;
-}
-
-/* 新闻信息样式 */
-.news-container {
-  background-color: #f9f9f9;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.news-container:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-}
-
-.news-container h3 {
-  margin-bottom: 20px;
-  color: #333;
-  font-size: 20px;
-  font-weight: 600;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 12px;
-}
-
-.news-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.news-item {
-  background-color: #fff;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.news-item:hover {
-  transform: translateX(5px);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-}
-
-.news-time {
-  font-size: 13px;
-  color: #909399;
-  margin-bottom: 8px;
-  font-weight: 500;
-}
-
-.news-content {
-  font-size: 15px;
-  line-height: 1.6;
-  color: #333;
-}
-
-.favorite-btn {
-  padding: 6px 12px;
-  background-color: #ff9800;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.3s ease;
-}
-
-.favorite-btn:hover {
-  background-color: #f57c00;
-  transform: scale(1.05);
-}
-
-.favorite-btn:active {
-  transform: scale(0.95);
-}
-
-.search-section {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  width: 60%;
-  max-width: 800px;
-}
-
-.search-section select {
-  width: 150px;
-  padding: 12px;
-  border: 1px solid #dcdfe6;
-  border-radius: 8px;
-  font-size: 14px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  transition: border-color 0.3s;
-}
-
-.search-section select:focus {
-  border-color: #409eff;
-  outline: none;
-}
-
-.search-section input {
-  flex: 1;
-  padding: 12px;
-  border: 1px solid #dcdfe6;
-  border-radius: 8px;
-  font-size: 14px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  transition: border-color 0.3s;
-}
-
-.search-section input:focus {
-  border-color: #409eff;
-  outline: none;
-}
-
-.search-section button {
-  width: 120px;
-  padding: 12px 20px;
-  background-color: #409eff;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s;
-  box-shadow: 0 3px 8px rgba(64, 158, 255, 0.3);
-}
-
-.search-section button:hover {
-  background-color: #66b1ff;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 12px rgba(64, 158, 255, 0.4);
-}
-
-.search-section button:active {
-  transform: translateY(0);
-}
-
-.stock-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 25px;
-  margin-top: 20px;
-}
-
-.stock-item {
-  background-color: #f9f9f9;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.stock-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-.stock-info {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 15px;
-}
-
-.stock-info p {
-  width: 100%;
-  font-size: 15px;
-  color: #555;
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px dashed #eee;
-}
-
-.stock-info p:last-child {
-  border-bottom: none;
-}
-
-.stock-info p span {
-  font-weight: bold;
-}
-
-.stock-actions {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-  margin-top: 15px;
-}
-
-.stock-actions button {
-  flex: 1;
-  padding: 10px 14px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s;
-  box-shadow: 0 3px 8px rgba(40, 167, 69, 0.3);
-}
-
-.stock-actions button:hover {
-  background-color: #218838;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 12px rgba(40, 167, 69, 0.4);
-}
-
-.stock-actions button:active {
-  transform: translateY(0);
-}
-
-.stock-actions button:last-child {
-  background-color: #007bff;
-  box-shadow: 0 3px 8px rgba(0, 123, 255, 0.3);
-}
-
-.stock-actions button:last-child:hover {
-  background-color: #0056b3;
-  box-shadow: 0 5px 12px rgba(0, 123, 255, 0.4);
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 30px;
-  gap: 20px;
-}
-
-.pagination button {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s;
-  box-shadow: 0 3px 8px rgba(0, 123, 255, 0.3);
-}
-
-.pagination button:hover:not(.disabled) {
-  background-color: #0056b3;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 12px rgba(0, 123, 255, 0.4);
-}
-
-.pagination button:active:not(.disabled) {
-  transform: translateY(0);
-}
-
-.pagination button.disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.page-info {
-  font-size: 16px;
-  font-weight: bold;
-  color: #555;
-}
-
-.modal-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(3px);
-}
-
-.modal-content {
-  background-color: #fff;
-  padding: 30px;
-  border-radius: 12px;
-  width: 450px;
-  max-width: 90%;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  animation: modalFadeIn 0.3s ease;
-}
-
-@keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.modal-content h3 {
-  font-size: 20px;
-  margin-bottom: 20px;
-  text-align: center;
-  color: #333;
-}
-
-.modal-content p {
-  font-size: 18px;
-  margin-bottom: 20px;
-  text-align: center;
-  color: #555;
-}
-
-.modal-content input {
-  width: 100%;
-  padding: 12px 15px;
-  border: 1px solid #dcdfe6;
-  border-radius: 8px;
-  font-size: 16px;
-  margin-bottom: 25px;
-  transition: border-color 0.3s;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-}
-
-.modal-content input:focus {
-  border-color: #409eff;
-  outline: none;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-}
-
-.modal-actions button {
-  flex: 1;
-  padding: 12px 20px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 15px;
-  transition: all 0.3s;
-}
-
-.modal-actions button:first-child {
-  background-color: #28a745;
-  color: white;
-  box-shadow: 0 3px 8px rgba(40, 167, 69, 0.3);
-}
-
-.modal-actions button:first-child:hover {
-  background-color: #218838;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 12px rgba(40, 167, 69, 0.4);
-}
-
-.modal-actions button:first-child:active {
-  transform: translateY(0);
-}
-
-.modal-actions button:last-child {
-  background-color: #f56c6c;
-  color: white;
-  box-shadow: 0 3px 8px rgba(245, 108, 108, 0.3);
-}
-
-.modal-actions button:last-child:hover {
-  background-color: #e64242;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 12px rgba(245, 108, 108, 0.4);
-}
-
-.modal-actions button:last-child:active {
-  transform: translateY(0);
-}
-
-@media (max-width: 768px) {
-  .search-section {
-    width: 95%;
-    flex-direction: column;
-  }
-
-  .search-section select,
-  .search-section input,
-  .search-section button {
-    width: 100%;
-  }
-
-  .stock-list {
-    grid-template-columns: 1fr;
-  }
-
-  .stock-item {
-    padding: 15px;
-  }
-
-  .top-stocks-container {
-    grid-template-columns: 1fr;
-  }
-
-  .modal-content {
-    width: 90%;
-    padding: 20px;
-  }
-}
-</style>

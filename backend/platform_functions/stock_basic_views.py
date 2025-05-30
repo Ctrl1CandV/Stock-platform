@@ -28,44 +28,6 @@ warnings.filterwarnings("ignore")
 def getCSRF(request):
     return JsonResponse({"detail": "CSRF cookie set"})
 
-def updateStockBasic():
-    ''' 更新股票列表 '''
-
-    try:
-        stock_basic.objects.first()
-    except Exception as db_error:
-        print(f"数据库未准备好，可能是数据迁移尚未完成: {str(db_error)}\n" + "请先完成数据迁移后再进行股票列表更新")
-        return
-
-    try:
-        new_stock_basic = pro.stock_basic(
-            exchange='', list_status='L',
-            fields='ts_code, name, area, industry, list_date'
-        )
-        if new_stock_basic.empty:
-            print("未获取到新的股票列表数据")
-            return
-
-        with transaction.atomic():
-            # 清除旧数据
-            stock_basic.objects.all().delete()
-
-            new_records = [
-                stock_basic(
-                    stock_code=row['ts_code'],
-                    stock_name=row['name'],
-                    industry=row['industry'],
-                    area=row['area'],
-                    list_date=row['list_date']
-                )
-                for index, row in new_stock_basic.iterrows()
-            ]
-
-            # 使用批处理进行数据插入
-            stock_basic.objects.bulk_create(new_records)
-    except Exception as e:
-        print(f"股票列表更新失败: {str(e)}")
-
 @api_view(methods=['GET'], require_token=False)
 def isTrading(request, params):
     ''' 判断当前是否可以交易 '''

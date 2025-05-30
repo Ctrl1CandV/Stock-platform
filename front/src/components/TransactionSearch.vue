@@ -25,57 +25,55 @@
 
     <!-- 搜索区域 -->
     <div class="search-section">
-      <div class="search-container">
-        <div class="search-header">
-          <h3 class="search-title">
-            <i class="icon-search">🔍</i>
-            筛选交易记录
-          </h3>
+      <div class="search-header">
+        <h3 class="search-title">
+          <i class="icon-search">🔍</i>
+          筛选交易记录
+        </h3>
+      </div>
+      <div class="search-controls">
+        <div class="control-group search-type-group">
+          <label class="control-label" style="color: black;">搜索类型</label>
+          <div class="select-wrapper">
+            <select v-model="searchType" class="search-select">
+              <option value="type">交易类型</option>
+              <option value="code">股票代码</option>
+              <option value="name">股票名称</option>
+            </select>
+            <div class="select-arrow">▼</div>
+          </div>
         </div>
-        <div class="search-controls">
-          <div class="control-group search-type-group">
-            <label class="control-label" style="color: black;">搜索类型</label>
-            <div class="select-wrapper">
-              <select v-model="searchType" class="search-select">
-                <option value="type">交易类型</option>
-                <option value="code">股票代码</option>
-                <option value="name">股票名称</option>
-              </select>
-              <div class="select-arrow">▼</div>
-            </div>
-          </div>
 
-          <div class="control-group" v-if="searchType !== 'type'">
-            <label class="control-label" style="color: black;">关键词</label>
-            <div class="input-wrapper">
-              <input type="text" v-model="searchKeyword" placeholder="输入搜索关键词" class="search-input"
-                @keyup.enter="searchTransactions" />
-              <span class="input-icon" v-if="searchKeyword" @click="searchKeyword = ''">✕</span>
-            </div>
+        <div class="control-group" v-if="searchType !== 'type'">
+          <label class="control-label" style="color: black;">关键词</label>
+          <div class="input-wrapper">
+            <input type="text" v-model="searchKeyword" placeholder="输入搜索关键词" class="search-input"
+              @keyup.enter="searchTransactions" />
+            <span class="input-icon" v-if="searchKeyword" @click="searchKeyword = ''">✕</span>
           </div>
+        </div>
 
-          <div class="control-group" v-else>
-            <label class="control-label" style="color: black;">交易类型</label>
-            <div class="select-wrapper">
-              <select v-model="searchKeyword" class="search-select">
-                <option value="">全部交易</option>
-                <option value="0">买入交易</option>
-                <option value="1">卖出交易</option>
-              </select>
-              <div class="select-arrow">▼</div>
-            </div>
+        <div class="control-group" v-else>
+          <label class="control-label" style="color: black;">交易类型</label>
+          <div class="select-wrapper">
+            <select v-model="searchKeyword" class="search-select">
+              <option value="">全部交易</option>
+              <option value="0">买入交易</option>
+              <option value="1">卖出交易</option>
+            </select>
+            <div class="select-arrow">▼</div>
           </div>
+        </div>
 
-          <div class="control-group button-group">
-            <button @click="searchTransactions" class="search-btn">
-              <i class="btn-icon">🔍</i>
-              <span>搜索</span>
-            </button>
-            <button @click="resetSearch" class="reset-btn">
-              <i class="btn-icon">🔄</i>
-              <span>重置</span>
-            </button>
-          </div>
+        <div class="control-group button-group">
+          <button @click="searchTransactions" class="search-btn">
+            <i class="btn-icon">🔍</i>
+            <span>搜索</span>
+          </button>
+          <button @click="resetSearch" class="reset-btn">
+            <i class="btn-icon">🔄</i>
+            <span>重置</span>
+          </button>
         </div>
       </div>
     </div>
@@ -109,15 +107,6 @@
 
     <!-- 交易记录列表 -->
     <div class="transaction-section">
-      <div class="section-header">
-        <h3 class="section-title">
-          <i class="icon-list">📋</i>
-          交易记录
-          <span class="record-count">({{ filteredTransactions ? filteredTransactions.length : transactionList.length
-            }}条记录)</span>
-        </h3>
-      </div>
-
       <div class="transaction-list" v-if="paginatedTransactions.length > 0">
         <div v-for="transaction in paginatedTransactions"
           :key="`${transaction.stock_code}_${transaction.transaction_type}_${transaction.transaction_date}`"

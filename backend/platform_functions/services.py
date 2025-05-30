@@ -7,10 +7,10 @@ import pandas as pd
 import datetime
 import warnings
 
+from utils.tools import ts, pro, get_previous_workday
 from .models import stock_market, stock_basic
 from django.utils import timezone
 from django.db import transaction
-from utils.tools import ts, pro
 from utils.logger import logger
 
 warnings.filterwarnings("ignore")
@@ -164,6 +164,21 @@ class StockDataService:
         processed_data = data[['trade_date', 'open', 'high', 'low', 'close', 'vol', 'amount']].copy()
         processed_data['trade_date'] = processed_data['trade_date'].astype(str)
         return processed_data.to_dict(orient='records')
+    
+    def get_basic_metrics(self, stock_code: str) -> Dict[str, float]:
+        """获取基本指标数据"""
+        trade_date = get_previous_workday()
+        df1 = ts.realtime_quote(ts_code='600000.SH', src='dc')[['OPEN', 'PRE_CLOSE', 'PRICE', 'VOLUME']]
+        df2 = pro.daily_basic(ts_code='600000.SH', trade_date=trade_date, fields='total_mv,pe')
+        df1, df2 = df1.to_dict(orient='records'), df2.to_dict(orient='records')
+        return {
+            'price': df1[0]['PRICE'],
+            'change_percent': (df1[0]['OPEN'] - df1[0]['PRE_CLOSE']) / df1[0]['PRE_CLOSE'],
+            'open': df1[0]['OPEN'],
+            'volume': df1[0]['VOLUME'],
+            'total_mv': df2[0]['total_mv'],
+            'pe': df2[0]['pe']
+        }
 
 class TechnicalIndicatorService:
     """技术指标服务类"""
@@ -403,6 +418,10 @@ def _get_news_information() -> Dict[str, str]:
 def _get_significant_index(trade_date: str) -> Dict[str, float]:
     """获取重要指数信息"""
     return market_service.get_significant_index_changes(trade_date)
+
+def _get_basic_metrics(stock_code: str) -> Dict[str, float]:
+    """获取基本指标数据"""
+    return stock_service.get_basic_metrics(stock_code)
 
 def cleanMarket() -> bool:
     """清理市场数据"""
