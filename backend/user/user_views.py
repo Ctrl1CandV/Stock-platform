@@ -42,7 +42,7 @@ def sendVerificationCode(request, params):
 def register(request, params):
     ''' 用户注册 '''
     user_email, user_name, user_password = params.get('userEmail'), params.get('userName'), str(params.get('password'))
-    verification_code = str(body.get('verificationCode'))
+    verification_code = str(params.get('verificationCode'))
 
     try:
         validate_email(user_email)
